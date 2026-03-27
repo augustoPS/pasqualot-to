@@ -14,9 +14,11 @@ Node.js PATH may need: `export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"`
 
 ## Stack
 
-- **Astro 6** with static output
+- **Astro 6** with `@astrojs/vercel` adapter — static output with serverless API routes
 - **Tailwind CSS v4** (configured via `@theme` in `src/styles/global.css`, no tailwind.config.js)
 - **Content Layer API** (Astro 5+ glob loaders, not legacy `type: 'content'`)
+- **Cloudflare R2** for protected photo storage (S3-compatible, accessed via `@aws-sdk/client-s3`)
+- **JWT auth** via `jose` — HTTP-only cookies for protected album access
 
 ## Architecture
 
@@ -35,7 +37,32 @@ Album slugs come from the JSON filename (e.g. `tokyo-2024.json` → `/gallery/to
 
 ### Photos
 
-Photos live in `public/photos/[album-slug]/`. The album JSON references filenames only (e.g. `"cover": "01.jpg"`). No Astro image optimization — files are served directly from `public/`.
+Two tiers depending on whether the album is protected:
+
+- **Public photos** — live in `public/photos/[album-slug]/`, served directly from CDN. Used for preview photos and unprotected albums.
+- **Protected photos** — stored in Cloudflare R2 bucket under `[album-slug]/[filename]`. Served via `/api/photos/[album]/[...file]` which validates a JWT cookie before proxying from R2.
+
+To mark an album as protected, set `"protected": true` in the album JSON. The album password is stored as a Vercel env var: `ALBUM_PASSWORD_<SLUG_UPPERCASE>` (e.g. `ALBUM_PASSWORD_PB_SALVADOR`). Never store passwords in source.
+
+### API Routes (`src/pages/api/`)
+
+All API routes use `export const prerender = false` for serverless execution.
+
+| Route | Method | Purpose |
+|---|---|---|
+| `/api/auth/album` | POST | Verify album password → issue JWT cookie |
+| `/api/photos/[album]/[...file]` | GET | Validate JWT → proxy photo from R2 |
+
+### Required Environment Variables
+
+| Variable | Description |
+|---|---|
+| `PHOTO_JWT_SECRET` | Secret for signing/verifying JWT tokens (32+ chars) |
+| `R2_ACCOUNT_ID` | Cloudflare account ID |
+| `R2_ACCESS_KEY_ID` | R2 access key |
+| `R2_SECRET_ACCESS_KEY` | R2 secret key |
+| `R2_BUCKET_NAME` | R2 bucket name (e.g. `pasqualottoweb`) |
+| `ALBUM_PASSWORD_<SLUG>` | Per-album password (e.g. `ALBUM_PASSWORD_PB_SALVADOR`) |
 
 ### Site Config (`src/config.ts`)
 
@@ -47,7 +74,9 @@ Photos live in `public/photos/[album-slug]/`. The album JSON references filename
 
 ## Adding Content
 
-**New album:** create `src/content/albums/[slug].json` and add photos to `public/photos/[slug]/`.
+**New public album:** create `src/content/albums/[slug].json` and add photos to `public/photos/[slug]/`.
+
+**New protected album:** create `src/content/albums/[slug].json` with `"protected": true`, upload photos to R2 under `[slug]/`, and set `ALBUM_PASSWORD_<SLUG>` in Vercel env vars.
 
 **Enable blog:** set `SHOW_BLOG = true` in `src/config.ts` once you have posts in `src/content/blog/`.
 
