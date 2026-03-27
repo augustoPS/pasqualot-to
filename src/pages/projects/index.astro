@@ -1,0 +1,51 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const projects = (await getCollection('projects')).sort(
+  (a, b) => b.data.year - a.data.year
+);
+---
+
+<BaseLayout title="Projects">
+  <div class="max-w-2xl mx-auto px-6 py-12">
+    <h1 class="text-2xl font-medium text-[var(--color-accent)] mb-10">Projects</h1>
+    <ul class="space-y-8">
+      {projects.map((project) => (
+        <li class="border-b border-[var(--color-border)] pb-8 last:border-0">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <p class="text-base font-medium text-[var(--color-text)]">{project.data.title}</p>
+              <p class="text-sm text-[var(--color-muted)] mt-1">{project.data.description}</p>
+              {project.data.tags.length > 0 && (
+                <div class="flex flex-wrap gap-2 mt-3">
+                  {project.data.tags.map((tag) => (
+                    <span class="text-xs text-[var(--color-muted)] border border-[var(--color-border)] px-2 py-0.5">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div class="flex flex-col items-end gap-2 shrink-0">
+              <span class="text-xs text-[var(--color-muted)]">{project.data.year}</span>
+              {project.data.url && (
+                <a
+                  href={project.data.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-xs text-[var(--color-muted)] hover:text-[var(--color-text)] transition-colors"
+                >
+                  Visit →
+                </a>
+              )}
+            </div>
+          </div>
+        </li>
+      ))}
+      {projects.length === 0 && (
+        <p class="text-sm text-[var(--color-muted)]">Nothing here yet.</p>
+      )}
+    </ul>
+  </div>
+</BaseLayout>

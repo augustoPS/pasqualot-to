@@ -1,0 +1,41 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+export async function getStaticPaths() {
+  const albums = await getCollection('albums');
+  return albums.map((album) => ({
+    params: { slug: album.id },
+    props: { album },
+  }));
+}
+
+const { album } = Astro.props;
+const { title, date, location, description, photos } = album.data;
+const year = new Date(date).getFullYear();
+---
+
+<BaseLayout title={title} description={description}>
+  <div class="max-w-5xl mx-auto px-6 py-12">
+    <div class="mb-10">
+      <h1 class="text-2xl font-medium text-[var(--color-accent)]">{title}</h1>
+      <p class="text-sm text-[var(--color-muted)] mt-1">
+        {location ? `${location}, ` : ''}{year}
+      </p>
+      {description && (
+        <p class="text-sm text-[var(--color-text)] mt-3 max-w-xl">{description}</p>
+      )}
+    </div>
+
+    <div class="columns-1 sm:columns-2 md:columns-3 gap-3 space-y-3">
+      {photos.map((photo) => (
+        <img
+          src={`/photos/${album.id}/${photo.file}`}
+          alt={photo.alt}
+          class="w-full break-inside-avoid"
+          loading="lazy"
+        />
+      ))}
+    </div>
+  </div>
+</BaseLayout>
