@@ -2,9 +2,14 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { SignJWT } from 'jose';
-import { getCollection } from 'astro:content';
 
-const secret = new TextEncoder().encode(import.meta.env.PHOTO_JWT_SECRET);
+const jwtSecret = new TextEncoder().encode(import.meta.env.PHOTO_JWT_SECRET);
+
+function getAlbumPassword(albumId: string): string | undefined {
+  // Album passwords are stored as env vars: ALBUM_PASSWORD_<SLUG_UPPERCASE_DASHES_TO_UNDERSCORES>
+  const key = `ALBUM_PASSWORD_${albumId.toUpperCase().replace(/-/g, '_')}`;
+  return import.meta.env[key];
+}
 
 export const POST: APIRoute = async ({ request }) => {
   let body: { album?: string; password?: string };
@@ -19,14 +24,16 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(JSON.stringify({ error: 'Missing fields' }), { status: 400 });
   }
 
-  const albums = await getCollection('albums');
-  const entry = albums.find((a) => a.id === album);
+  if (!/^[a-z0-9-]+$/.test(album)) {
+    return new Response(JSON.stringify({ error: 'Invalid album' }), { status: 400 });
+  }
 
-  if (!entry?.data.password) {
+  const expectedPassword = getAlbumPassword(album);
+  if (!expectedPassword) {
     return new Response(JSON.stringify({ error: 'Album not found' }), { status: 404 });
   }
 
-  if (password !== entry.data.password) {
+  if (password !== expectedPassword) {
     return new Response(JSON.stringify({ error: 'Incorrect password' }), { status: 401 });
   }
 

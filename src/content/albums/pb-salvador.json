@@ -3,7 +3,7 @@
   "date": "2026-03-25",
   "location": "Salvador Carlos Gomes, Porto Alegre",
   "cover": "IMG_4242.jpg",
-  "password": "pb-salvadorcg@%)#",
+  "protected": true,
   "previewCount": 5,
   "photos": [
     { "file": "IMG_4242.jpg", "alt": "PagBrasil Salvador" }

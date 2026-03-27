@@ -19,6 +19,11 @@ export const GET: APIRoute = async ({ params, cookies }) => {
   const { album, file } = params;
   if (!album || !file) return new Response('Not found', { status: 404 });
 
+  // Prevent path traversal and enforce slug format
+  if (!/^[a-z0-9-]+$/.test(album) || file.includes('..') || file.includes('/..')) {
+    return new Response('Bad request', { status: 400 });
+  }
+
   const token = cookies.get(`album_token_${album}`)?.value;
   if (!token) return new Response('Unauthorized', { status: 401 });
 
