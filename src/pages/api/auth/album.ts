@@ -40,7 +40,7 @@ export const POST: APIRoute = async ({ request }) => {
   const token = await new SignJWT({ album })
     .setProtectedHeader({ alg: 'HS256' })
     .setExpirationTime('24h')
-    .sign(secret);
+    .sign(jwtSecret);
 
   const secure = import.meta.env.PROD ? '; Secure' : '';
   const cookie = `album_token_${album}=${token}; HttpOnly; Path=/; SameSite=Lax; Max-Age=86400${secure}`;
