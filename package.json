@@ -12,8 +12,11 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/vercel": "^10.0.3",
+    "@aws-sdk/client-s3": "^3.1018.0",
     "@tailwindcss/vite": "^4.2.2",
     "astro": "^6.1.1",
+    "jose": "^6.2.2",
     "tailwindcss": "^4.2.2"
   }
 }

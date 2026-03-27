@@ -1,6 +1,5 @@
 ---
 import { getCollection } from 'astro:content';
-import { createHash } from 'node:crypto';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 
 export async function getStaticPaths() {
@@ -17,9 +16,6 @@ const year = new Date(date).getFullYear();
 const ogImage = `/photos/${album.id}/${cover}`;
 
 const isProtected = !!password;
-const passwordHash = password
-  ? createHash('sha256').update(password).digest('hex')
-  : null;
 
 const previewPhotos = isProtected ? photos.slice(0, previewCount) : photos;
 const lockedPhotos = isProtected ? photos.slice(previewCount) : [];
@@ -57,18 +53,18 @@ const lockedPhotos = isProtected ? photos.slice(previewCount) : [];
         </button>
       ))}
 
-      <!-- Locked photos (hidden until unlocked) -->
+      <!-- Locked photos: src not set until authenticated -->
       {lockedPhotos.map((photo, i) => (
         <button
           class="w-full break-inside-avoid cursor-zoom-in block locked-photo hidden"
           data-lightbox
-          data-src={`/photos/${album.id}/${photo.file}`}
+          data-src={`/api/photos/${album.id}/${photo.file}`}
           data-alt={photo.alt}
           data-index={previewCount + i}
           aria-label={`View ${photo.alt}`}
         >
           <img
-            src={`/photos/${album.id}/${photo.file}`}
+            data-src={`/api/photos/${album.id}/${photo.file}`}
             alt={photo.alt}
             class="w-full transition-opacity duration-200 hover:opacity-80"
             loading="lazy"
@@ -142,7 +138,7 @@ const lockedPhotos = isProtected ? photos.slice(previewCount) : [];
   </div>
 </BaseLayout>
 
-<script define:vars={{ passwordHash, isProtected, albumId: album.id }}>
+<script define:vars={{ isProtected, albumId: album.id }}>
   // Lightbox
   function getVisiblePhotos() {
     return Array.from(document.querySelectorAll('[data-lightbox]:not(.hidden)')).map(el => ({
@@ -197,18 +193,19 @@ const lockedPhotos = isProtected ? photos.slice(previewCount) : [];
   if (isProtected) {
     const storageKey = `unlocked:${albumId}`;
 
-    async function hashPassword(pw) {
-      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pw));
-      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
-    }
-
     function unlock() {
-      document.querySelectorAll('.locked-photo').forEach(el => el.classList.remove('hidden'));
+      document.querySelectorAll('.locked-photo').forEach(el => {
+        el.classList.remove('hidden');
+        const image = el.querySelector('img');
+        if (image && image.dataset.src) {
+          image.src = image.dataset.src;
+        }
+      });
       document.getElementById('password-gate').classList.add('hidden');
       bindPhotoButtons();
     }
 
-    // Restore from session
+    // Restore from session (cookie still valid for 24h)
     if (sessionStorage.getItem(storageKey) === 'true') {
       unlock();
     }
@@ -216,8 +213,12 @@ const lockedPhotos = isProtected ? photos.slice(previewCount) : [];
     document.getElementById('password-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const input = document.getElementById('password-input').value;
-      const hash = await hashPassword(input);
-      if (hash === passwordHash) {
+      const res = await fetch('/api/auth/album', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ album: albumId, password: input }),
+      });
+      if (res.ok) {
         sessionStorage.setItem(storageKey, 'true');
         unlock();
       } else {
