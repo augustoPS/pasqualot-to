@@ -11,11 +11,12 @@ export async function getStaticPaths() {
 }
 
 const { album } = Astro.props;
-const { title, date, location, description, photos } = album.data;
+const { title, date, location, description, cover, photos } = album.data;
 const year = new Date(date).getFullYear();
+const ogImage = `/photos/${album.id}/${cover}`;
 ---
 
-<BaseLayout title={title} description={description}>
+<BaseLayout title={title} description={description} ogImage={ogImage}>
   <div class="max-w-5xl mx-auto px-6 py-12">
     <div class="mb-10">
       <h1 class="text-2xl font-medium text-[var(--color-accent)]">{title}</h1>
@@ -28,14 +29,108 @@ const year = new Date(date).getFullYear();
     </div>
 
     <div class="columns-1 sm:columns-2 md:columns-3 gap-3 space-y-3">
-      {photos.map((photo) => (
-        <img
-          src={`/photos/${album.id}/${photo.file}`}
-          alt={photo.alt}
-          class="w-full break-inside-avoid"
-          loading="lazy"
-        />
+      {photos.map((photo, i) => (
+        <button
+          class="w-full break-inside-avoid cursor-zoom-in block"
+          data-lightbox
+          data-src={`/photos/${album.id}/${photo.file}`}
+          data-alt={photo.alt}
+          data-index={i}
+          aria-label={`View ${photo.alt}`}
+        >
+          <img
+            src={`/photos/${album.id}/${photo.file}`}
+            alt={photo.alt}
+            class="w-full transition-opacity duration-200 hover:opacity-80"
+            loading="lazy"
+          />
+        </button>
       ))}
     </div>
   </div>
+
+  <!-- Lightbox overlay -->
+  <div
+    id="lightbox"
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-black/95"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Photo lightbox"
+  >
+    <button
+      id="lightbox-close"
+      class="absolute top-5 right-6 text-white/50 hover:text-white text-2xl leading-none transition-colors"
+      aria-label="Close"
+    >
+      &#x2715;
+    </button>
+    <button
+      id="lightbox-prev"
+      class="absolute left-4 text-white/40 hover:text-white text-3xl leading-none transition-colors px-2 py-4"
+      aria-label="Previous photo"
+    >
+      &#x2039;
+    </button>
+    <img
+      id="lightbox-img"
+      src=""
+      alt=""
+      class="max-h-[90vh] max-w-[90vw] object-contain select-none"
+    />
+    <button
+      id="lightbox-next"
+      class="absolute right-4 text-white/40 hover:text-white text-3xl leading-none transition-colors px-2 py-4"
+      aria-label="Next photo"
+    >
+      &#x203A;
+    </button>
+  </div>
 </BaseLayout>
+
+<script>
+  const photos = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-lightbox]')).map(el => ({
+    src: el.dataset.src!,
+    alt: el.dataset.alt!,
+  }));
+
+  const lightbox = document.getElementById('lightbox')!;
+  const img = document.getElementById('lightbox-img') as HTMLImageElement;
+  let current = 0;
+
+  function open(index: number) {
+    current = index;
+    img.src = photos[current].src;
+    img.alt = photos[current].alt;
+    lightbox.classList.remove('hidden');
+    lightbox.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function close() {
+    lightbox.classList.add('hidden');
+    lightbox.classList.remove('flex');
+    document.body.style.overflow = '';
+  }
+
+  function prev() { open((current - 1 + photos.length) % photos.length); }
+  function next() { open((current + 1) % photos.length); }
+
+  document.querySelectorAll<HTMLButtonElement>('[data-lightbox]').forEach((btn, i) => {
+    btn.addEventListener('click', () => open(i));
+  });
+
+  document.getElementById('lightbox-close')!.addEventListener('click', close);
+  document.getElementById('lightbox-prev')!.addEventListener('click', prev);
+  document.getElementById('lightbox-next')!.addEventListener('click', next);
+
+  lightbox.addEventListener('click', (e) => {
+    if (e.target === lightbox) close();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (lightbox.classList.contains('hidden')) return;
+    if (e.key === 'Escape') close();
+    if (e.key === 'ArrowLeft') prev();
+    if (e.key === 'ArrowRight') next();
+  });
+</script>

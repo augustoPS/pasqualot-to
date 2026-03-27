@@ -6,10 +6,12 @@ import { SITE_NAME, SITE_DESCRIPTION } from '../config';
 interface Props {
   title?: string;
   description?: string;
+  ogImage?: string;
 }
 
-const { title, description = SITE_DESCRIPTION } = Astro.props;
+const { title, description = SITE_DESCRIPTION, ogImage } = Astro.props;
 const pageTitle = title ? `${title} — ${SITE_NAME}` : SITE_NAME;
+const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin);
 ---
 
 <html lang="en">
@@ -18,7 +20,16 @@ const pageTitle = title ? `${title} — ${SITE_NAME}` : SITE_NAME;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="generator" content={Astro.generator} />
     <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalURL} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    {ogImage && <meta property="og:image" content={ogImage} />}
+
     <title>{pageTitle}</title>
   </head>
   <body class="flex flex-col min-h-screen">
