@@ -1,5 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
+import { createHash } from 'node:crypto';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 
 export async function getStaticPaths() {
@@ -11,9 +12,17 @@ export async function getStaticPaths() {
 }
 
 const { album } = Astro.props;
-const { title, date, location, description, cover, photos } = album.data;
+const { title, date, location, description, cover, photos, password, previewCount } = album.data;
 const year = new Date(date).getFullYear();
 const ogImage = `/photos/${album.id}/${cover}`;
+
+const isProtected = !!password;
+const passwordHash = password
+  ? createHash('sha256').update(password).digest('hex')
+  : null;
+
+const previewPhotos = isProtected ? photos.slice(0, previewCount) : photos;
+const lockedPhotos = isProtected ? photos.slice(previewCount) : [];
 ---
 
 <BaseLayout title={title} description={description} ogImage={ogImage}>
@@ -28,8 +37,9 @@ const ogImage = `/photos/${album.id}/${cover}`;
       )}
     </div>
 
-    <div class="columns-1 sm:columns-2 md:columns-3 gap-3 space-y-3">
-      {photos.map((photo, i) => (
+    <!-- Preview photos (always visible) -->
+    <div id="photo-grid" class="columns-1 sm:columns-2 md:columns-3 gap-3 space-y-3">
+      {previewPhotos.map((photo, i) => (
         <button
           class="w-full break-inside-avoid cursor-zoom-in block"
           data-lightbox
@@ -46,7 +56,52 @@ const ogImage = `/photos/${album.id}/${cover}`;
           />
         </button>
       ))}
+
+      <!-- Locked photos (hidden until unlocked) -->
+      {lockedPhotos.map((photo, i) => (
+        <button
+          class="w-full break-inside-avoid cursor-zoom-in block locked-photo hidden"
+          data-lightbox
+          data-src={`/photos/${album.id}/${photo.file}`}
+          data-alt={photo.alt}
+          data-index={previewCount + i}
+          aria-label={`View ${photo.alt}`}
+        >
+          <img
+            src={`/photos/${album.id}/${photo.file}`}
+            alt={photo.alt}
+            class="w-full transition-opacity duration-200 hover:opacity-80"
+            loading="lazy"
+          />
+        </button>
+      ))}
     </div>
+
+    <!-- Password gate -->
+    {isProtected && (
+      <div id="password-gate" class="mt-8 border border-[var(--color-border)] p-8 text-center">
+        <p class="text-sm text-[var(--color-muted)] mb-1">
+          {lockedPhotos.length} more photo{lockedPhotos.length !== 1 ? 's' : ''}
+        </p>
+        <p class="text-base text-[var(--color-text)] mb-6">Enter the password to view the full album</p>
+        <form id="password-form" class="flex flex-col sm:flex-row gap-3 justify-center max-w-sm mx-auto">
+          <input
+            type="password"
+            id="password-input"
+            placeholder="Password"
+            class="flex-1 bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] px-4 py-2 text-sm outline-none focus:border-[var(--color-muted)] placeholder:text-[var(--color-muted)]"
+            autocomplete="current-password"
+          />
+          <button
+            type="submit"
+            class="px-6 py-2 text-sm bg-white text-black hover:bg-[var(--color-text)] transition-colors"
+          >
+            Unlock
+          </button>
+        </form>
+        <p id="password-error" class="text-xs text-red-400 mt-3 hidden">Incorrect password.</p>
+      </div>
+    )}
   </div>
 
   <!-- Lightbox overlay -->
@@ -87,17 +142,22 @@ const ogImage = `/photos/${album.id}/${cover}`;
   </div>
 </BaseLayout>
 
-<script>
-  const photos = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-lightbox]')).map(el => ({
-    src: el.dataset.src!,
-    alt: el.dataset.alt!,
-  }));
+<script define:vars={{ passwordHash, isProtected, albumId: album.id }}>
+  // Lightbox
+  function getVisiblePhotos() {
+    return Array.from(document.querySelectorAll('[data-lightbox]:not(.hidden)')).map(el => ({
+      src: el.dataset.src,
+      alt: el.dataset.alt,
+    }));
+  }
 
-  const lightbox = document.getElementById('lightbox')!;
-  const img = document.getElementById('lightbox-img') as HTMLImageElement;
+  const lightbox = document.getElementById('lightbox');
+  const img = document.getElementById('lightbox-img');
+  let photos = getVisiblePhotos();
   let current = 0;
 
-  function open(index: number) {
+  function open(index) {
+    photos = getVisiblePhotos();
     current = index;
     img.src = photos[current].src;
     img.alt = photos[current].alt;
@@ -115,22 +175,56 @@ const ogImage = `/photos/${album.id}/${cover}`;
   function prev() { open((current - 1 + photos.length) % photos.length); }
   function next() { open((current + 1) % photos.length); }
 
-  document.querySelectorAll<HTMLButtonElement>('[data-lightbox]').forEach((btn, i) => {
-    btn.addEventListener('click', () => open(i));
-  });
+  function bindPhotoButtons() {
+    document.querySelectorAll('[data-lightbox]:not(.hidden)').forEach((btn, i) => {
+      btn.onclick = () => open(i);
+    });
+  }
+  bindPhotoButtons();
 
-  document.getElementById('lightbox-close')!.addEventListener('click', close);
-  document.getElementById('lightbox-prev')!.addEventListener('click', prev);
-  document.getElementById('lightbox-next')!.addEventListener('click', next);
-
-  lightbox.addEventListener('click', (e) => {
-    if (e.target === lightbox) close();
-  });
-
+  document.getElementById('lightbox-close').addEventListener('click', close);
+  document.getElementById('lightbox-prev').addEventListener('click', prev);
+  document.getElementById('lightbox-next').addEventListener('click', next);
+  lightbox.addEventListener('click', (e) => { if (e.target === lightbox) close(); });
   document.addEventListener('keydown', (e) => {
     if (lightbox.classList.contains('hidden')) return;
     if (e.key === 'Escape') close();
     if (e.key === 'ArrowLeft') prev();
     if (e.key === 'ArrowRight') next();
   });
+
+  // Password gate
+  if (isProtected) {
+    const storageKey = `unlocked:${albumId}`;
+
+    async function hashPassword(pw) {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pw));
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function unlock() {
+      document.querySelectorAll('.locked-photo').forEach(el => el.classList.remove('hidden'));
+      document.getElementById('password-gate').classList.add('hidden');
+      bindPhotoButtons();
+    }
+
+    // Restore from session
+    if (sessionStorage.getItem(storageKey) === 'true') {
+      unlock();
+    }
+
+    document.getElementById('password-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const input = document.getElementById('password-input').value;
+      const hash = await hashPassword(input);
+      if (hash === passwordHash) {
+        sessionStorage.setItem(storageKey, 'true');
+        unlock();
+      } else {
+        const err = document.getElementById('password-error');
+        err.classList.remove('hidden');
+        document.getElementById('password-input').value = '';
+      }
+    });
+  }
 </script>

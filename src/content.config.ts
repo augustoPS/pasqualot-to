@@ -15,6 +15,8 @@ const albums = defineCollection({
         alt: z.string(),
       })
     ),
+    password: z.string().optional(),
+    previewCount: z.number().default(5),
   }),
 });
 
