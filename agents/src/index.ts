@@ -64,10 +64,10 @@ for (const { agent, focus } of pipeline) {
   const prompt = `${basePrompt}\n\nYour specific focus for this review:\n${focus}`;
   const response = await team.ask(agent, prompt, { stream: true });
 
-  // Save key findings to shared memory
+  // Save full findings to shared memory
   team.get(agent).shareMemory(
     `analysis:${agent}`,
-    response.content.slice(0, 500) + (response.content.length > 500 ? '…' : ''),
+    response.content,
     ['analysis', 'pasqualot.to']
   );
 }
