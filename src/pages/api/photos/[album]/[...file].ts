@@ -4,14 +4,14 @@ import type { APIRoute } from 'astro';
 import { jwtVerify } from 'jose';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 
-const secret = new TextEncoder().encode(import.meta.env.PHOTO_JWT_SECRET);
+const secret = new TextEncoder().encode(process.env.PHOTO_JWT_SECRET);
 
 const s3 = new S3Client({
   region: 'auto',
-  endpoint: `https://${import.meta.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+  endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
   credentials: {
-    accessKeyId: import.meta.env.R2_ACCESS_KEY_ID!,
-    secretAccessKey: import.meta.env.R2_SECRET_ACCESS_KEY!,
+    accessKeyId: process.env.R2_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
   },
 });
 
@@ -36,7 +36,7 @@ export const GET: APIRoute = async ({ params, cookies }) => {
 
   try {
     const cmd = new GetObjectCommand({
-      Bucket: import.meta.env.R2_BUCKET_NAME,
+      Bucket: process.env.R2_BUCKET_NAME,
       Key: `${album}/${file}`,
     });
     const res = await s3.send(cmd);

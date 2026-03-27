@@ -3,12 +3,12 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { SignJWT } from 'jose';
 
-const jwtSecret = new TextEncoder().encode(import.meta.env.PHOTO_JWT_SECRET);
+const jwtSecret = new TextEncoder().encode(process.env.PHOTO_JWT_SECRET);
 
 function getAlbumPassword(albumId: string): string | undefined {
   // Album passwords are stored as env vars: ALBUM_PASSWORD_<SLUG_UPPERCASE_DASHES_TO_UNDERSCORES>
   const key = `ALBUM_PASSWORD_${albumId.toUpperCase().replace(/-/g, '_')}`;
-  return import.meta.env[key];
+  return process.env[key];
 }
 
 export const POST: APIRoute = async ({ request }) => {
