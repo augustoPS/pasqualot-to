@@ -4,6 +4,7 @@ import { serveStatic } from '@hono/node-server/serve-static';
 import { stream } from 'hono/streaming';
 import { Team } from '../team.js';
 import { teamConfig } from '../team.config.js';
+import { readMemory } from '../memory/store.js';
 
 const app = new Hono();
 const team = new Team();
@@ -71,6 +72,20 @@ app.post('/group', async (c) => {
       })
     );
   });
+});
+
+// ── Initial messages (pre-populated from analysis run) ────────────────────────
+app.get('/initial-messages', (c) => {
+  const shared = readMemory();
+  const analyses = shared
+    .filter(e => e.key.startsWith('analysis:'))
+    .map(e => ({
+      agent: e.key.replace('analysis:', ''),
+      content: e.value,
+      timestamp: e.timestamp,
+    }))
+    .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+  return c.json(analyses);
 });
 
 // ── Memory ────────────────────────────────────────────────────────────────────

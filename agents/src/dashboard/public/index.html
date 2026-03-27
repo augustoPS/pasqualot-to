@@ -150,16 +150,33 @@
 
 <script>
   let agents = [];
-  let activeTab = null; // agent name or 'group'
-  let chatHistories = {}; // { [agentOrGroup]: DOMNode[] }
+  let activeTab = null;
+  // chatHistories: { [tab]: Array<{role:'user'|'agent'|'group', content, meta?, agent?}> }
+  let chatHistories = {};
   let selectedGroupAgents = new Set();
   let isStreaming = false;
   let memoryOpen = false;
 
   // ── Init ──────────────────────────────────────────────────────────────────
   async function init() {
-    const res = await fetch('/agents');
-    agents = await res.json();
+    const [agentsRes, initialRes] = await Promise.all([
+      fetch('/agents'),
+      fetch('/initial-messages'),
+    ]);
+    agents = await agentsRes.json();
+    const initialMessages = await initialRes.json(); // [{agent, content, timestamp}]
+
+    // Pre-populate individual DMs with each agent's finding
+    initialMessages.forEach(({ agent, content }) => {
+      if (!chatHistories[agent]) chatHistories[agent] = [];
+      chatHistories[agent].push({ role: 'agent', content, meta: agent.replace(/_/g,' ') });
+    });
+
+    // Pre-populate group chat with all findings in order
+    chatHistories['group'] = initialMessages.map(({ agent, content }) => ({
+      role: 'group', agent, content,
+    }));
+
     renderSidebar();
   }
 
@@ -192,6 +209,7 @@
     activeTab = name;
     if (!chatHistories[name]) chatHistories[name] = [];
     renderSidebar();
+
     renderMessages();
 
     const isGroup = name === 'group';
@@ -242,32 +260,54 @@
   function renderMessages() {
     const container = document.getElementById('messages');
     container.innerHTML = '';
-    (chatHistories[activeTab] || []).forEach(node => container.appendChild(node.cloneNode(true)));
+    (chatHistories[activeTab] || []).forEach(entry => {
+      if (entry.role === 'group') {
+        container.appendChild(makeGroupNode(entry.agent, entry.content));
+      } else {
+        container.appendChild(makeMsgNode(entry.role, entry.content, entry.meta));
+      }
+    });
     scrollToBottom();
   }
 
-  function appendMessage(role, text, meta = '') {
-    const container = document.getElementById('messages');
+  function makeMsgNode(role, text, meta) {
     const msg = document.createElement('div');
     msg.className = `msg ${role}`;
-    msg.innerHTML = `
-      <div class="msg-meta">${meta || (role === 'user' ? 'You' : activeTab.replace(/_/g,' '))}</div>
-      <div class="msg-bubble">${escHtml(text)}</div>
-    `;
-    container.appendChild(msg);
-    chatHistories[activeTab].push(msg);
-    scrollToBottom();
-    return msg.querySelector('.msg-bubble');
+    msg.innerHTML = `<div class="msg-meta">${escHtml(meta || (role === 'user' ? 'You' : activeTab.replace(/_/g,' ')))}</div><div class="msg-bubble">${escHtml(text)}</div>`;
+    return msg;
   }
 
-  function appendGroupResponse(agentName) {
-    const container = document.getElementById('messages');
+  function makeGroupNode(agentName, text) {
     const wrapper = document.createElement('div');
     wrapper.className = 'group-response';
-    wrapper.innerHTML = `<div class="group-response-header">${agentName.replace(/_/g,' ')}</div><div class="group-response-body streaming"></div>`;
-    container.appendChild(wrapper);
+    wrapper.innerHTML = `<div class="group-response-header">${escHtml(agentName.replace(/_/g,' '))}</div><div class="group-response-body">${escHtml(text)}</div>`;
+    return wrapper;
+  }
+
+  // Append a message to the active tab — adds to history and live DOM
+  function appendMessage(role, text, meta = '') {
+    const entry = { role, content: text, meta: meta || (role === 'user' ? 'You' : activeTab.replace(/_/g,' ')) };
+    chatHistories[activeTab].push(entry);
+    const node = makeMsgNode(role, text, entry.meta);
+    document.getElementById('messages').appendChild(node);
     scrollToBottom();
-    return wrapper.querySelector('.group-response-body');
+    return node.querySelector('.msg-bubble');
+  }
+
+  // Append a streaming group response block — saves to history when done
+  function appendGroupResponse(agentName) {
+    const entry = { role: 'group', agent: agentName, content: '' };
+    chatHistories[activeTab].push(entry);
+    const node = makeGroupNode(agentName, '');
+    const body = node.querySelector('.group-response-body');
+    body.classList.add('streaming');
+    document.getElementById('messages').appendChild(node);
+    scrollToBottom();
+    // Return a proxy object that updates both the live DOM and the history entry
+    return {
+      append(delta) { entry.content += delta; body.textContent = entry.content; scrollToBottom(); },
+      done() { body.classList.remove('streaming'); },
+    };
   }
 
   function scrollToBottom() {
@@ -302,9 +342,14 @@
   }
 
   async function sendAgent(agentName, message) {
-    const bubble = appendMessage('agent', '', agentName.replace(/_/g,' '));
+    // Add a placeholder entry to history, then stream into it
+    const entry = { role: 'agent', content: '', meta: agentName.replace(/_/g,' ') };
+    chatHistories[activeTab].push(entry);
+    const node = makeMsgNode('agent', '', entry.meta);
+    const bubble = node.querySelector('.msg-bubble');
     bubble.classList.add('streaming');
-    let fullText = '';
+    document.getElementById('messages').appendChild(node);
+    scrollToBottom();
 
     const res = await fetch(`/chat/${agentName}`, {
       method: 'POST',
@@ -318,9 +363,8 @@
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-      const chunk = decoder.decode(value, { stream: true });
-      fullText += chunk;
-      bubble.textContent = fullText;
+      entry.content += decoder.decode(value, { stream: true });
+      bubble.textContent = entry.content;
       scrollToBottom();
     }
 
@@ -332,11 +376,8 @@
     const selected = [...selectedGroupAgents];
     if (!selected.length) return;
 
-    // Append a user message first
-    const agentBubbles = {};
-    selected.forEach(name => {
-      agentBubbles[name] = appendGroupResponse(name);
-    });
+    const handles = {};
+    selected.forEach(name => { handles[name] = appendGroupResponse(name); });
 
     const res = await fetch('/group', {
       method: 'POST',
@@ -346,24 +387,16 @@
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
-    const agentTexts = {};
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-      const raw = decoder.decode(value, { stream: true });
-      const lines = raw.split('\n').filter(Boolean);
+      const lines = decoder.decode(value, { stream: true }).split('\n').filter(Boolean);
       for (const line of lines) {
         try {
           const ev = JSON.parse(line);
-          if (ev.chunk && agentBubbles[ev.agent]) {
-            agentTexts[ev.agent] = (agentTexts[ev.agent] || '') + ev.chunk;
-            agentBubbles[ev.agent].textContent = agentTexts[ev.agent];
-            scrollToBottom();
-          }
-          if (ev.done && agentBubbles[ev.agent]) {
-            agentBubbles[ev.agent].classList.remove('streaming');
-          }
+          if (ev.chunk && handles[ev.agent]) handles[ev.agent].append(ev.chunk);
+          if (ev.done && handles[ev.agent]) handles[ev.agent].done();
         } catch {}
       }
     }
