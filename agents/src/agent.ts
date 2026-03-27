@@ -42,7 +42,7 @@ export class Agent {
     this.history = [];
   }
 
-  async chat(userMessage: string, options: { stream?: boolean } = {}): Promise<AgentResponse> {
+  async chat(userMessage: string, options: { stream?: boolean; onChunk?: (delta: string) => void } = {}): Promise<AgentResponse> {
     const myMemory = readMemory(this.name);
     const sharedMemory = readMemory();
 
@@ -63,7 +63,7 @@ export class Agent {
       systemPrompt,
       {
         stream: options.stream,
-        onChunk: options.stream ? (delta) => process.stdout.write(delta) : undefined,
+        onChunk: options.stream ? (options.onChunk ?? ((delta) => process.stdout.write(delta))) : undefined,
       }
     );
 

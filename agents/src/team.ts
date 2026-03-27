@@ -22,7 +22,7 @@ export class Team {
   }
 
   // Ask a single agent
-  async ask(agentName: string, message: string, options: { stream?: boolean } = {}): Promise<AgentResponse> {
+  async ask(agentName: string, message: string, options: { stream?: boolean; onChunk?: (delta: string) => void } = {}): Promise<AgentResponse> {
     return this.get(agentName).chat(message, options);
   }
 
