@@ -1,8 +1,10 @@
 ---
 import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import { SHOW_NOTES } from '../../config';
 
 export async function getStaticPaths() {
+  if (!SHOW_NOTES) return [];
   const notes = await getCollection('notes');
   return notes.map((note) => ({
     params: { slug: note.id },

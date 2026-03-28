@@ -1,10 +1,10 @@
 ---
-import { SITE_NAME, SHOW_BLOG } from '../config';
+import { SITE_NAME, SHOW_BLOG, SHOW_NOTES } from '../config';
 
 const links = [
   { href: '/', label: 'Gallery' },
   ...(SHOW_BLOG ? [{ href: '/blog', label: 'Blog' }] : []),
-  { href: '/notes', label: 'Notes' },
+  ...(SHOW_NOTES ? [{ href: '/notes', label: 'Notes' }] : []),
   { href: '/projects', label: 'Projects' },
   { href: '/about', label: 'About' },
 ];

@@ -1,6 +1,9 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import { SHOW_NOTES } from '../../config';
+
+if (!SHOW_NOTES) return Astro.redirect('/', 302);
 
 const notes = (await getCollection('notes')).sort(
   (a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime()

@@ -1,0 +1,43 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+// Set PUBLIC_404_PHOTO in your .env (or Vercel env vars) to a public photo URL.
+// When set, the emoji placeholder is replaced by the image on load.
+const photoUrl = import.meta.env.PUBLIC_404_PHOTO ?? '';
+---
+
+<BaseLayout title="404 — Not Found">
+  <div class="max-w-5xl mx-auto px-6 py-24 text-center">
+
+    <div class="flex justify-center mb-8">
+      <span id="emoji-placeholder" class="text-6xl select-none">📷</span>
+      {photoUrl && (
+        <img
+          id="photo-404"
+          src={photoUrl}
+          alt=""
+          class="hidden max-h-64 object-contain"
+          style="display:none"
+        />
+      )}
+    </div>
+
+    <p class="text-base text-[var(--color-muted)] mb-8">This page doesn't exist.</p>
+    <a href="/" class="text-sm text-[var(--color-text)] hover:text-[var(--color-accent)] transition-colors">
+      ← Back to gallery
+    </a>
+  </div>
+</BaseLayout>
+
+{photoUrl && (
+  <script>
+    const img = document.getElementById('photo-404');
+    const emoji = document.getElementById('emoji-placeholder');
+    if (img && emoji) {
+      img.onload = () => {
+        emoji.style.display = 'none';
+        img.style.display = 'block';
+      };
+    }
+  </script>
+)}
