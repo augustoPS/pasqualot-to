@@ -17,7 +17,7 @@ const year = new Date(date).getFullYear();
 const ogImage = `/photos/${album.id}/${cover}`;
 
 const previewPhotos = isProtected ? photos.slice(0, previewCount) : photos;
-const lockedPhotos = isProtected ? photos.slice(previewCount) : [];
+const lockedCount = isProtected ? Math.max(0, photos.length - previewCount) : 0;
 ---
 
 <BaseLayout title={title} description={description} ogImage={ogImage}>
@@ -52,31 +52,14 @@ const lockedPhotos = isProtected ? photos.slice(previewCount) : [];
         </button>
       ))}
 
-      <!-- Locked photos: src not set until authenticated -->
-      {lockedPhotos.map((photo, i) => (
-        <button
-          class="w-full break-inside-avoid cursor-zoom-in block locked-photo hidden"
-          data-lightbox
-          data-src={`/api/photos/${album.id}/${photo.file}`}
-          data-alt={photo.alt}
-          data-index={previewCount + i}
-          aria-label={`View ${photo.alt}`}
-        >
-          <img
-            data-src={`/api/photos/${album.id}/${photo.file}`}
-            alt={photo.alt}
-            class="w-full transition-opacity duration-200 hover:opacity-80"
-            loading="lazy"
-          />
-        </button>
-      ))}
+      <!-- Locked photos injected here by JS after authentication -->
     </div>
 
     <!-- Password gate -->
     {isProtected && (
       <div id="password-gate" class="mt-8 border border-[var(--color-border)] p-8 text-center">
         <p class="text-sm text-[var(--color-muted)] mb-1">
-          {lockedPhotos.length} more photo{lockedPhotos.length !== 1 ? 's' : ''}
+          {lockedCount} more photo{lockedCount !== 1 ? 's' : ''}
         </p>
         <p class="text-base text-[var(--color-text)] mb-6">Enter the password to view the full album</p>
         <form id="password-form" class="flex flex-col sm:flex-row gap-3 justify-center max-w-sm mx-auto">
@@ -137,7 +120,7 @@ const lockedPhotos = isProtected ? photos.slice(previewCount) : [];
   </div>
 </BaseLayout>
 
-<script define:vars={{ isProtected, albumId: album.id }}>
+<script define:vars={{ isProtected, albumId: album.id, previewCount }}>
   // Lightbox
   function getVisiblePhotos() {
     return Array.from(document.querySelectorAll('[data-lightbox]:not(.hidden)')).map(el => ({
@@ -192,14 +175,33 @@ const lockedPhotos = isProtected ? photos.slice(previewCount) : [];
   if (isProtected) {
     const storageKey = `unlocked:${albumId}`;
 
-    function unlock() {
-      document.querySelectorAll('.locked-photo').forEach(el => {
-        el.classList.remove('hidden');
-        const image = el.querySelector('img');
-        if (image && image.dataset.src) {
-          image.src = image.dataset.src;
-        }
+    async function fetchAndInjectPhotos() {
+      const res = await fetch(`/api/albums/${albumId}/photos`);
+      if (!res.ok) return false;
+      const { photos: lockedPhotos } = await res.json();
+      const grid = document.getElementById('photo-grid');
+      lockedPhotos.forEach((photo, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'w-full break-inside-avoid cursor-zoom-in block';
+        btn.dataset.lightbox = '';
+        btn.dataset.src = photo.src;
+        btn.dataset.alt = photo.alt;
+        btn.dataset.index = String(previewCount + i);
+        btn.setAttribute('aria-label', `View ${photo.alt}`);
+        const img = document.createElement('img');
+        img.src = photo.src;
+        img.alt = photo.alt;
+        img.className = 'w-full transition-opacity duration-200 hover:opacity-80';
+        img.loading = 'lazy';
+        btn.appendChild(img);
+        grid.appendChild(btn);
       });
+      return true;
+    }
+
+    async function unlock() {
+      const ok = await fetchAndInjectPhotos();
+      if (!ok) return;
       document.getElementById('password-gate').classList.add('hidden');
       bindPhotoButtons();
     }

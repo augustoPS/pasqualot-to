@@ -2,6 +2,17 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { SignJWT } from 'jose';
+import { timingSafeEqual } from 'node:crypto';
+
+function safeCompare(a: string, b: string): boolean {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) {
+    timingSafeEqual(bufA, bufA); // constant-time dummy compare
+    return false;
+  }
+  return timingSafeEqual(bufA, bufB);
+}
 
 const jwtSecret = new TextEncoder().encode(process.env.PHOTO_JWT_SECRET);
 
@@ -33,7 +44,8 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(JSON.stringify({ error: 'Album not found' }), { status: 404 });
   }
 
-  if (password !== expectedPassword) {
+  if (!safeCompare(password, expectedPassword)) {
+    await new Promise(resolve => setTimeout(resolve, 1000));
     return new Response(JSON.stringify({ error: 'Incorrect password' }), { status: 401 });
   }
 
