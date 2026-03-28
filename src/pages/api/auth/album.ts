@@ -3,6 +3,7 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { SignJWT } from 'jose';
 import { timingSafeEqual } from 'node:crypto';
+import { PHOTO_JWT_SECRET as jwtSecret } from '../../../lib/env';
 
 function safeCompare(a: string, b: string): boolean {
   const bufA = Buffer.from(a);
@@ -13,8 +14,6 @@ function safeCompare(a: string, b: string): boolean {
   }
   return timingSafeEqual(bufA, bufB);
 }
-
-const jwtSecret = new TextEncoder().encode(process.env.PHOTO_JWT_SECRET);
 
 function getAlbumPassword(albumId: string): string | undefined {
   // Album passwords are stored as env vars: ALBUM_PASSWORD_<SLUG_UPPERCASE_DASHES_TO_UNDERSCORES>

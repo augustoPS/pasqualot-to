@@ -3,8 +3,7 @@ export const prerender = false;
 import type { APIRoute } from 'astro';
 import { jwtVerify } from 'jose';
 import { getEntry } from 'astro:content';
-
-const secret = new TextEncoder().encode(process.env.PHOTO_JWT_SECRET);
+import { PHOTO_JWT_SECRET as secret } from '../../../../lib/env';
 
 export const GET: APIRoute = async ({ params, cookies }) => {
   const { slug } = params;
