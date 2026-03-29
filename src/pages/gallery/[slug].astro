@@ -205,6 +205,8 @@ function fullUrl(file: string) {
     previewImg.src = photo.src;
     previewImg.alt = photo.alt;
 
+    schedulePreload(index);
+
     document.querySelectorAll('.thumb').forEach(btn => {
       const active = Number(btn.dataset.index) === index;
       btn.classList.toggle('ring-1', active);
@@ -255,6 +257,49 @@ function fullUrl(file: string) {
     btn.addEventListener('click', () => selectPhoto(Number(btn.dataset.index)));
   });
 
+  // ─── PROXIMITY-BASED PRELOADER ───────────────────────────────────────────
+  // Maintains a priority queue of nearby full-res photos sorted by distance
+  // from the active photo. When the active index changes, the queue rebuilds
+  // so closer photos always win bandwidth over distant ones.
+  //
+  // Uses new Image() — shares the same browser cache as <img src>, unlike
+  // fetch(). Concurrency is capped at 2 to avoid saturating bandwidth while
+  // the user is actively browsing.
+  const preloaded = new Set(); // srcs already loaded or in-flight
+  let preloadQueue = [];
+  let preloadActive = 0;
+  const PRELOAD_CONCURRENCY = 2;
+  const PRELOAD_WINDOW = 3; // preload ±3 photos around the active one
+
+  function runPreloadQueue() {
+    while (preloadActive < PRELOAD_CONCURRENCY && preloadQueue.length > 0) {
+      const src = preloadQueue.shift();
+      if (preloaded.has(src)) continue;
+      preloaded.add(src);
+      preloadActive++;
+      const img = new Image();
+      img.onload = img.onerror = () => {
+        preloadActive--;
+        runPreloadQueue(); // chain: fill slot when one completes
+      };
+      img.src = src;
+    }
+  }
+
+  function schedulePreload(centerIdx) {
+    // Priority order: +1, -1, +2, -2, ... — immediate neighbors first.
+    // Replacing preloadQueue means in-flight loads finish (no wasted bandwidth)
+    // but next slots are filled from the new position's priority order.
+    preloadQueue = [];
+    for (let d = 1; d <= PRELOAD_WINDOW; d++) {
+      for (const idx of [centerIdx + d, centerIdx - d]) {
+        const photo = allPhotos[idx];
+        if (photo && !preloaded.has(photo.src)) preloadQueue.push(photo.src);
+      }
+    }
+    runPreloadQueue();
+  }
+
   // ─── LIGHTBOX ─────────────────────────────────────────────────────────────
 
   const lightbox      = document.getElementById('lightbox');
@@ -294,12 +339,14 @@ function fullUrl(file: string) {
   function lightboxPrev() {
     activeIndex = (activeIndex - 1 + allPhotos.length) % allPhotos.length;
     setLightboxImage(allPhotos[activeIndex].src, allPhotos[activeIndex].alt);
+    schedulePreload(activeIndex);
     selectPhoto(activeIndex);
   }
 
   function lightboxNext() {
     activeIndex = (activeIndex + 1) % allPhotos.length;
     setLightboxImage(allPhotos[activeIndex].src, allPhotos[activeIndex].alt);
+    schedulePreload(activeIndex);
     selectPhoto(activeIndex);
   }
 
@@ -329,6 +376,7 @@ function fullUrl(file: string) {
         alt: p.alt,
       }));
       updateLoadMore();
+      schedulePreload(activeIndex); // re-queue now that full photo list is available
       return true;
     }
 
