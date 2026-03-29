@@ -93,7 +93,7 @@ function fullUrl(file: string) {
     </div>
 
     <!-- Password gate -->
-    {isProtected && (
+    {isProtected && lockedCount > 0 && (
       <div id="password-gate" class="mt-10 border border-[var(--color-border)] p-8 text-center">
         <p class="text-sm text-[var(--color-muted)] mb-1">
           {lockedCount} more photo{lockedCount !== 1 ? 's' : ''}
