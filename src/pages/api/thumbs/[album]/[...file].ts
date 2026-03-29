@@ -8,7 +8,7 @@ import sharp from 'sharp';
 export const GET: APIRoute = async ({ params, url }) => {
   const { album, file } = params;
   if (!album || !file) return new Response('Not found', { status: 404 });
-  if (!/^[a-z0-9-]+$/.test(album) || file.includes('..') || file.includes('/..')) {
+  if (!/^[a-z0-9-]+$/.test(album) || !/^[a-zA-Z0-9._-]+$/.test(file)) {
     return new Response('Bad request', { status: 400 });
   }
 

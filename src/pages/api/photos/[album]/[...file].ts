@@ -20,7 +20,7 @@ export const GET: APIRoute = async ({ params, cookies, url }) => {
   if (!album || !file) return new Response('Not found', { status: 404 });
 
   // Prevent path traversal and enforce slug format
-  if (!/^[a-z0-9-]+$/.test(album) || file.includes('..') || file.includes('/..')) {
+  if (!/^[a-z0-9-]+$/.test(album) || !/^[a-zA-Z0-9._-]+$/.test(file)) {
     return new Response('Bad request', { status: 400 });
   }
 

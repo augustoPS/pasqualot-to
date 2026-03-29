@@ -2,17 +2,16 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { SignJWT } from 'jose';
-import { timingSafeEqual } from 'node:crypto';
+import { timingSafeEqual, createHmac } from 'node:crypto';
 import { PHOTO_JWT_SECRET as jwtSecret } from '../../../lib/env';
 
 function safeCompare(a: string, b: string): boolean {
-  const bufA = Buffer.from(a);
-  const bufB = Buffer.from(b);
-  if (bufA.length !== bufB.length) {
-    timingSafeEqual(bufA, bufA); // constant-time dummy compare
-    return false;
-  }
-  return timingSafeEqual(bufA, bufB);
+  // HMAC-normalize both inputs to equal-length digests before comparing,
+  // so the comparison is constant-time regardless of input length differences.
+  const key = process.env.PHOTO_JWT_SECRET!;
+  const hmacA = createHmac('sha256', key).update(a).digest();
+  const hmacB = createHmac('sha256', key).update(b).digest();
+  return timingSafeEqual(hmacA, hmacB);
 }
 
 function getAlbumPassword(albumId: string): string | undefined {
