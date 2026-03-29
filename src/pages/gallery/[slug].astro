@@ -19,14 +19,18 @@ const ogImage = `/photos/${album.id}/${cover}`;
 const previewPhotos = isProtected ? photos.slice(0, previewCount) : photos;
 const lockedCount = isProtected ? Math.max(0, photos.length - previewCount) : 0;
 
-// Thumbnail URL helper — protected photos go through the auth proxy, public through the thumbs route
+// Thumbnail URL helper
+// Preview photos of protected albums are stored in public/photos/ — serve them directly.
+// Locked photos go through the auth proxy. Public albums use the thumbs route.
+const previewFiles = new Set(previewPhotos.map(p => p.file));
+
 function thumbUrl(file: string) {
-  return isProtected
-    ? `/api/photos/${album.id}/${file}?w=300`
-    : `/api/thumbs/${album.id}/${file}?w=300`;
+  if (!isProtected || previewFiles.has(file)) return `/api/thumbs/${album.id}/${file}?w=300`;
+  return `/api/photos/${album.id}/${file}?w=300`;
 }
 function fullUrl(file: string) {
-  return isProtected ? `/api/photos/${album.id}/${file}` : `/photos/${album.id}/${file}`;
+  if (!isProtected || previewFiles.has(file)) return `/photos/${album.id}/${file}`;
+  return `/api/photos/${album.id}/${file}`;
 }
 ---
 

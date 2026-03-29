@@ -5,16 +5,6 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import sharp from 'sharp';
 
-async function isProtectedAlbum(albumId: string): Promise<boolean> {
-  try {
-    const jsonPath = resolve('src/content/albums', `${albumId}.json`);
-    const data = JSON.parse(await readFile(jsonPath, 'utf-8'));
-    return data.protected === true;
-  } catch {
-    return true; // fail safe — treat unknown albums as protected
-  }
-}
-
 export const GET: APIRoute = async ({ params, url }) => {
   const { album, file } = params;
   if (!album || !file) return new Response('Not found', { status: 404 });
@@ -22,10 +12,8 @@ export const GET: APIRoute = async ({ params, url }) => {
     return new Response('Bad request', { status: 400 });
   }
 
-  if (await isProtectedAlbum(album)) {
-    return new Response('Unauthorized', { status: 401 });
-  }
-
+  // Security: only files present in public/photos/ are served — locked photos are never
+  // placed there, so they will naturally 404 rather than needing an explicit album check.
   try {
     const photoPath = resolve('public/photos', album, file);
     const raw = await readFile(photoPath);
