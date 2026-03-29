@@ -22,7 +22,9 @@ const lockedCount = isProtected ? Math.max(0, photos.length - previewCount) : 0;
 
 <BaseLayout title={title} description={description} ogImage={ogImage}>
   <div class="max-w-5xl mx-auto px-6 py-12">
-    <div class="mb-10">
+
+    <!-- Album header -->
+    <div class="mb-8">
       <h1 class="text-2xl font-medium text-[var(--color-accent)]">{title}</h1>
       <p class="text-sm text-[var(--color-muted)] mt-1">
         {location ? `${location}, ` : ''}{year}
@@ -32,44 +34,57 @@ const lockedCount = isProtected ? Math.max(0, photos.length - previewCount) : 0;
       )}
     </div>
 
-    <!-- Preview photos (always visible) -->
-    <div id="photo-grid" class="columns-1 sm:columns-2 md:columns-3 gap-3 space-y-3">
-      {previewPhotos.map((photo, i) => (
-        <button
-          class="w-full break-inside-avoid cursor-zoom-in block"
-          data-lightbox
-          data-src={`/photos/${album.id}/${photo.file}`}
-          data-alt={photo.alt}
-          data-index={i}
-          aria-label={`View ${photo.alt}`}
-        >
-          <img
-            src={`/photos/${album.id}/${photo.file}`}
-            alt={photo.alt}
-            class="w-full transition-opacity duration-200 hover:opacity-80"
-            loading="lazy"
-          />
-        </button>
-      ))}
-
-        <!-- Locked photos injected here by JS after authentication -->
-    </div>
-
-    <!-- Load more button (shown after unlock when more photos remain) -->
-    <div id="load-more-wrap" class="mt-8 text-center" style="display:none">
+    <!-- Centered preview -->
+    <div class="flex flex-col items-center gap-6">
       <button
-        id="load-more-btn"
-        class="px-6 py-2 text-sm border border-[var(--color-border)] text-[var(--color-muted)] hover:text-[var(--color-text)] hover:border-[var(--color-muted)] transition-colors"
-        onclick="loadMorePhotos()"
+        id="preview-btn"
+        class="w-full max-w-2xl cursor-zoom-in block"
+        aria-label="View photo fullscreen"
+        onclick="openLightbox()"
       >
-        Load more
+        <img
+          id="preview-img"
+          src={`/photos/${album.id}/${previewPhotos[0].file}`}
+          alt={previewPhotos[0].alt}
+          class="w-full object-contain max-h-[70vh]"
+        />
       </button>
-      <p id="load-more-count" class="text-xs text-[var(--color-muted)] mt-2"></p>
+
+      <!-- Thumbnail strip -->
+      <div class="w-full flex flex-col items-center gap-3">
+        <div id="thumb-strip" class="flex gap-2 justify-center flex-wrap">
+          {previewPhotos.map((photo, i) => (
+            <button
+              class:list={[
+                'thumb flex-shrink-0 w-16 h-16 overflow-hidden transition-opacity duration-150',
+                i === 0 ? 'ring-1 ring-[var(--color-accent)] opacity-100' : 'opacity-40 hover:opacity-80'
+              ]}
+              data-src={`/photos/${album.id}/${photo.file}`}
+              data-alt={photo.alt}
+              data-index={i}
+              aria-label={`View ${photo.alt}`}
+            >
+              <img src={`/photos/${album.id}/${photo.file}`} alt={photo.alt} class="w-full h-full object-cover" loading="lazy" />
+            </button>
+          ))}
+          <!-- Locked thumbs injected here after auth -->
+        </div>
+
+        <button
+          id="load-more-btn"
+          class="text-xs text-[var(--color-muted)] hover:text-[var(--color-text)] border border-[var(--color-border)] hover:border-[var(--color-muted)] px-4 py-1.5 transition-colors"
+          style="display:none"
+          onclick="loadMoreThumbs()"
+        >
+          Load more
+        </button>
+        <p id="load-more-count" class="text-xs text-[var(--color-muted)]" style="display:none"></p>
+      </div>
     </div>
 
     <!-- Password gate -->
     {isProtected && (
-      <div id="password-gate" class="mt-8 border border-[var(--color-border)] p-8 text-center">
+      <div id="password-gate" class="mt-10 border border-[var(--color-border)] p-8 text-center">
         <p class="text-sm text-[var(--color-muted)] mb-1">
           {lockedCount} more photo{lockedCount !== 1 ? 's' : ''}
         </p>
@@ -94,7 +109,7 @@ const lockedCount = isProtected ? Math.max(0, photos.length - previewCount) : 0;
     )}
   </div>
 
-  <!-- Lightbox overlay -->
+  <!-- Lightbox -->
   <div
     id="lightbox"
     class="fixed inset-0 z-50 hidden items-center justify-center bg-black/95"
@@ -102,155 +117,148 @@ const lockedCount = isProtected ? Math.max(0, photos.length - previewCount) : 0;
     aria-modal="true"
     aria-label="Photo lightbox"
   >
-    <button
-      id="lightbox-close"
-      class="absolute top-5 right-6 text-white/50 hover:text-white text-2xl leading-none transition-colors"
-      aria-label="Close"
-    >
-      &#x2715;
-    </button>
-    <button
-      id="lightbox-prev"
-      class="absolute left-4 text-white/40 hover:text-white text-3xl leading-none transition-colors px-2 py-4"
-      aria-label="Previous photo"
-    >
-      &#x2039;
-    </button>
-    <img
-      id="lightbox-img"
-      src=""
-      alt=""
-      class="max-h-[90vh] max-w-[90vw] object-contain select-none"
-    />
-    <button
-      id="lightbox-next"
-      class="absolute right-4 text-white/40 hover:text-white text-3xl leading-none transition-colors px-2 py-4"
-      aria-label="Next photo"
-    >
-      &#x203A;
-    </button>
+    <button id="lightbox-close" class="absolute top-5 right-6 text-white/50 hover:text-white text-2xl leading-none transition-colors" aria-label="Close">&#x2715;</button>
+    <button id="lightbox-prev" class="absolute left-4 text-white/40 hover:text-white text-3xl leading-none transition-colors px-2 py-4" aria-label="Previous photo">&#x2039;</button>
+    <img id="lightbox-img" src="" alt="" class="max-h-[90vh] max-w-[90vw] object-contain select-none" />
+    <button id="lightbox-next" class="absolute right-4 text-white/40 hover:text-white text-3xl leading-none transition-colors px-2 py-4" aria-label="Next photo">&#x203A;</button>
   </div>
 </BaseLayout>
 
 <script define:vars={{ isProtected, albumId: album.id, previewCount }}>
-  // Lightbox
-  function getVisiblePhotos() {
-    return Array.from(document.querySelectorAll('[data-lightbox]:not(.hidden)')).map(el => ({
-      src: el.dataset.src,
-      alt: el.dataset.alt,
-    }));
+  const THUMB_PAGE = 20;
+  let allPhotos = []; // all photos available (preview + unlocked)
+  let loadedThumbCount = 0;
+  let activeIndex = 0;
+
+  const previewImg  = document.getElementById('preview-img');
+  const strip       = document.getElementById('thumb-strip');
+  const loadMoreBtn = document.getElementById('load-more-btn');
+  const loadMoreCount = document.getElementById('load-more-count');
+
+  // Collect initially rendered preview photos
+  document.querySelectorAll('.thumb').forEach(btn => {
+    allPhotos.push({ src: btn.dataset.src, alt: btn.dataset.alt });
+  });
+  loadedThumbCount = allPhotos.length;
+
+  function selectPhoto(index) {
+    activeIndex = index;
+    const photo = allPhotos[index];
+    previewImg.src = photo.src;
+    previewImg.alt = photo.alt;
+    document.querySelectorAll('.thumb').forEach(btn => {
+      const active = Number(btn.dataset.index) === index;
+      btn.classList.toggle('ring-1', active);
+      btn.classList.toggle('ring-[var(--color-accent)]', active);
+      btn.classList.toggle('opacity-100', active);
+      btn.classList.toggle('opacity-40', !active);
+    });
   }
 
-  const lightbox = document.getElementById('lightbox');
-  const img = document.getElementById('lightbox-img');
-  let photos = getVisiblePhotos();
-  let current = 0;
+  function addThumb(photo, index) {
+    const btn = document.createElement('button');
+    btn.className = 'thumb flex-shrink-0 w-16 h-16 overflow-hidden transition-opacity duration-150 opacity-40 hover:opacity-80';
+    btn.dataset.src   = photo.src;
+    btn.dataset.alt   = photo.alt;
+    btn.dataset.index = String(index);
+    btn.setAttribute('aria-label', `View ${photo.alt}`);
+    const img = document.createElement('img');
+    img.src = photo.src;
+    img.alt = photo.alt;
+    img.className = 'w-full h-full object-cover';
+    img.loading = 'lazy';
+    btn.appendChild(img);
+    btn.addEventListener('click', () => selectPhoto(index));
+    strip.appendChild(btn);
+  }
 
-  function open(index) {
-    photos = getVisiblePhotos();
-    current = index;
-    img.src = photos[current].src;
-    img.alt = photos[current].alt;
+  function updateLoadMore() {
+    const remaining = allPhotos.length - loadedThumbCount;
+    if (remaining > 0) {
+      loadMoreBtn.style.display = 'block';
+      loadMoreCount.style.display = 'block';
+      loadMoreCount.textContent = `${loadedThumbCount} of ${allPhotos.length} photos`;
+    } else {
+      loadMoreBtn.style.display = 'none';
+      loadMoreCount.style.display = 'none';
+    }
+  }
+
+  window.loadMoreThumbs = function() {
+    const batch = allPhotos.slice(loadedThumbCount, loadedThumbCount + THUMB_PAGE);
+    batch.forEach((photo, i) => addThumb(photo, loadedThumbCount + i));
+    loadedThumbCount += batch.length;
+    updateLoadMore();
+  };
+
+  // Bind existing thumbs
+  document.querySelectorAll('.thumb').forEach(btn => {
+    btn.addEventListener('click', () => selectPhoto(Number(btn.dataset.index)));
+  });
+
+  // Lightbox
+  const lightbox    = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightbox-img');
+
+  window.openLightbox = function() {
+    lightboxImg.src = allPhotos[activeIndex].src;
+    lightboxImg.alt = allPhotos[activeIndex].alt;
     lightbox.classList.remove('hidden');
     lightbox.classList.add('flex');
     document.body.style.overflow = 'hidden';
-  }
+  };
 
-  function close() {
+  function closeLightbox() {
     lightbox.classList.add('hidden');
     lightbox.classList.remove('flex');
     document.body.style.overflow = '';
   }
 
-  function prev() { open((current - 1 + photos.length) % photos.length); }
-  function next() { open((current + 1) % photos.length); }
-
-  function bindPhotoButtons() {
-    document.querySelectorAll('[data-lightbox]:not(.hidden)').forEach((btn, i) => {
-      btn.onclick = () => open(i);
-    });
+  function lightboxPrev() {
+    activeIndex = (activeIndex - 1 + allPhotos.length) % allPhotos.length;
+    lightboxImg.src = allPhotos[activeIndex].src;
+    lightboxImg.alt = allPhotos[activeIndex].alt;
+    selectPhoto(activeIndex);
   }
-  bindPhotoButtons();
 
-  document.getElementById('lightbox-close').addEventListener('click', close);
-  document.getElementById('lightbox-prev').addEventListener('click', prev);
-  document.getElementById('lightbox-next').addEventListener('click', next);
-  lightbox.addEventListener('click', (e) => { if (e.target === lightbox) close(); });
+  function lightboxNext() {
+    activeIndex = (activeIndex + 1) % allPhotos.length;
+    lightboxImg.src = allPhotos[activeIndex].src;
+    lightboxImg.alt = allPhotos[activeIndex].alt;
+    selectPhoto(activeIndex);
+  }
+
+  document.getElementById('lightbox-close').addEventListener('click', closeLightbox);
+  document.getElementById('lightbox-prev').addEventListener('click', lightboxPrev);
+  document.getElementById('lightbox-next').addEventListener('click', lightboxNext);
+  lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
   document.addEventListener('keydown', (e) => {
     if (lightbox.classList.contains('hidden')) return;
-    if (e.key === 'Escape') close();
-    if (e.key === 'ArrowLeft') prev();
-    if (e.key === 'ArrowRight') next();
+    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'ArrowLeft') lightboxPrev();
+    if (e.key === 'ArrowRight') lightboxNext();
   });
 
   // Password gate
   if (isProtected) {
     const storageKey = `unlocked:${albumId}`;
 
-    const PAGE_SIZE = 20;
-    let allLockedPhotos = [];
-    let loadedCount = 0;
-
-    function injectPhotoBatch() {
-      const grid = document.getElementById('photo-grid');
-      const batch = allLockedPhotos.slice(loadedCount, loadedCount + PAGE_SIZE);
-      batch.forEach((photo, i) => {
-        const btn = document.createElement('button');
-        btn.className = 'w-full break-inside-avoid cursor-zoom-in block';
-        btn.dataset.lightbox = '';
-        btn.dataset.src = photo.src;
-        btn.dataset.alt = photo.alt;
-        btn.dataset.index = String(previewCount + loadedCount + i);
-        btn.setAttribute('aria-label', `View ${photo.alt}`);
-        const imgEl = document.createElement('img');
-        imgEl.src = photo.src;
-        imgEl.alt = photo.alt;
-        imgEl.className = 'w-full transition-opacity duration-200 hover:opacity-80';
-        imgEl.loading = 'lazy';
-        btn.appendChild(imgEl);
-        grid.appendChild(btn);
-      });
-      loadedCount += batch.length;
-      updateLoadMore();
-      bindPhotoButtons();
-    }
-
-    function updateLoadMore() {
-      const remaining = allLockedPhotos.length - loadedCount;
-      const wrap = document.getElementById('load-more-wrap');
-      const count = document.getElementById('load-more-count');
-      if (remaining > 0) {
-        wrap.style.display = 'block';
-        count.textContent = `${loadedCount} of ${allLockedPhotos.length} photos loaded`;
-      } else {
-        wrap.style.display = 'none';
-      }
-    }
-
-    window.loadMorePhotos = function() {
-      injectPhotoBatch();
-    };
-
-    async function fetchAndInjectPhotos() {
+    async function fetchAndUnlock() {
       const res = await fetch(`/api/albums/${albumId}/photos`);
       if (!res.ok) return false;
-      const { photos: lockedPhotos } = await res.json();
-      allLockedPhotos = lockedPhotos;
-      loadedCount = 0;
-      injectPhotoBatch();
+      const { photos: locked } = await res.json();
+      locked.forEach(p => allPhotos.push({ src: p.src, alt: p.alt }));
+      updateLoadMore();
       return true;
     }
 
     async function unlock() {
-      const ok = await fetchAndInjectPhotos();
+      const ok = await fetchAndUnlock();
       if (!ok) return;
       document.getElementById('password-gate').classList.add('hidden');
     }
 
-    // Restore from session (cookie still valid for 24h)
-    if (sessionStorage.getItem(storageKey) === 'true') {
-      unlock();
-    }
+    if (sessionStorage.getItem(storageKey) === 'true') unlock();
 
     document.getElementById('password-form').addEventListener('submit', async (e) => {
       e.preventDefault();
