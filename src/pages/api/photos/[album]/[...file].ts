@@ -44,7 +44,8 @@ export const GET: APIRoute = async ({ params, cookies, url }) => {
     if (!body) return new Response('Not found', { status: 404 });
 
     const w = url.searchParams.get('w');
-    const width = w ? Math.min(parseInt(w, 10), 2400) : null;
+    const parsed = w ? parseInt(w, 10) : null;
+    const width = parsed && Number.isFinite(parsed) && parsed > 0 ? Math.min(parsed, 2400) : null;
     let contentType = res.ContentType ?? 'image/jpeg';
     if (width) {
       body = await sharp(body).resize({ width, withoutEnlargement: true }).jpeg({ quality: 80 }).toBuffer();

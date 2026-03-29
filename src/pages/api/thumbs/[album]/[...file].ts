@@ -31,7 +31,8 @@ export const GET: APIRoute = async ({ params, url }) => {
     const raw = await readFile(photoPath);
 
     const w = url.searchParams.get('w');
-    const width = w ? Math.min(parseInt(w, 10), 2400) : 300;
+    const parsed = w ? parseInt(w, 10) : null;
+    const width = parsed && Number.isFinite(parsed) && parsed > 0 ? Math.min(parsed, 2400) : 300;
     const body = await sharp(raw).resize({ width, withoutEnlargement: true }).jpeg({ quality: 80 }).toBuffer();
 
     return new Response(body, {

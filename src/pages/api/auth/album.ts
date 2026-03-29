@@ -40,7 +40,8 @@ export const POST: APIRoute = async ({ request }) => {
 
   const expectedPassword = getAlbumPassword(album);
   if (!expectedPassword) {
-    return new Response(JSON.stringify({ error: 'Album not found' }), { status: 404 });
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    return new Response(JSON.stringify({ error: 'Incorrect password' }), { status: 401 });
   }
 
   if (!safeCompare(password, expectedPassword)) {
