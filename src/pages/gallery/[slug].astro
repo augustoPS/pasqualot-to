@@ -18,6 +18,16 @@ const ogImage = `/photos/${album.id}/${cover}`;
 
 const previewPhotos = isProtected ? photos.slice(0, previewCount) : photos;
 const lockedCount = isProtected ? Math.max(0, photos.length - previewCount) : 0;
+
+// Thumbnail URL helper — protected photos go through the auth proxy, public through the thumbs route
+function thumbUrl(file: string) {
+  return isProtected
+    ? `/api/photos/${album.id}/${file}?w=300`
+    : `/api/thumbs/${album.id}/${file}?w=300`;
+}
+function fullUrl(file: string) {
+  return isProtected ? `/api/photos/${album.id}/${file}` : `/photos/${album.id}/${file}`;
+}
 ---
 
 <BaseLayout title={title} description={description} ogImage={ogImage}>
@@ -44,7 +54,7 @@ const lockedCount = isProtected ? Math.max(0, photos.length - previewCount) : 0;
       >
         <img
           id="preview-img"
-          src={`/photos/${album.id}/${previewPhotos[0].file}`}
+          src={fullUrl(previewPhotos[0].file)}
           alt={previewPhotos[0].alt}
           class="w-full object-contain max-h-[70vh]"
         />
@@ -59,12 +69,12 @@ const lockedCount = isProtected ? Math.max(0, photos.length - previewCount) : 0;
                 'thumb flex-shrink-0 w-16 h-16 overflow-hidden transition-opacity duration-150',
                 i === 0 ? 'ring-1 ring-[var(--color-accent)] opacity-100' : 'opacity-40 hover:opacity-80'
               ]}
-              data-src={`/photos/${album.id}/${photo.file}`}
+              data-src={fullUrl(photo.file)}
               data-alt={photo.alt}
               data-index={i}
               aria-label={`View ${photo.alt}`}
             >
-              <img src={`/photos/${album.id}/${photo.file}`} alt={photo.alt} class="w-full h-full object-cover" loading="lazy" />
+              <img src={thumbUrl(photo.file)} alt={photo.alt} class="w-full h-full object-cover" loading="lazy" />
             </button>
           ))}
           <!-- Locked thumbs injected here after auth -->
@@ -124,7 +134,7 @@ const lockedCount = isProtected ? Math.max(0, photos.length - previewCount) : 0;
   </div>
 </BaseLayout>
 
-<script define:vars={{ isProtected, albumId: album.id, previewCount }}>
+<script define:vars={{ isProtected, albumId: album.id, previewCount, isProtectedAlbum: isProtected }}>
   const THUMB_PAGE = 20;
   let allPhotos = []; // all photos available (preview + unlocked)
   let loadedThumbCount = 0;
@@ -137,7 +147,7 @@ const lockedCount = isProtected ? Math.max(0, photos.length - previewCount) : 0;
 
   // Collect initially rendered preview photos
   document.querySelectorAll('.thumb').forEach(btn => {
-    allPhotos.push({ src: btn.dataset.src, alt: btn.dataset.alt });
+    allPhotos.push({ src: btn.dataset.src, alt: btn.dataset.alt, thumbSrc: btn.querySelector('img')?.src });
   });
   loadedThumbCount = allPhotos.length;
 
@@ -163,7 +173,7 @@ const lockedCount = isProtected ? Math.max(0, photos.length - previewCount) : 0;
     btn.dataset.index = String(index);
     btn.setAttribute('aria-label', `View ${photo.alt}`);
     const img = document.createElement('img');
-    img.src = photo.src;
+    img.src = photo.thumbSrc ?? photo.src;
     img.alt = photo.alt;
     img.className = 'w-full h-full object-cover';
     img.loading = 'lazy';
@@ -247,7 +257,11 @@ const lockedCount = isProtected ? Math.max(0, photos.length - previewCount) : 0;
       const res = await fetch(`/api/albums/${albumId}/photos`);
       if (!res.ok) return false;
       const { photos: locked } = await res.json();
-      locked.forEach(p => allPhotos.push({ src: p.src, alt: p.alt }));
+      locked.forEach(p => allPhotos.push({
+        src: p.src,
+        thumbSrc: `${p.src}?w=300`,
+        alt: p.alt,
+      }));
       updateLoadMore();
       return true;
     }
