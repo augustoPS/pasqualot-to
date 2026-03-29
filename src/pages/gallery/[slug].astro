@@ -45,6 +45,7 @@ function fullUrl(file: string) {
 
       <!-- Album header -->
       <div class="mb-4">
+        <a href="/" class="text-xs text-[var(--color-muted)] hover:text-[var(--color-text)] transition-colors inline-block mb-2">← Gallery</a>
         <h1 class="text-2xl font-medium text-[var(--color-accent)]">{title}</h1>
         <p class="text-sm text-[var(--color-muted)] mt-1">
           {location ? `${location}, ` : ''}{year}
@@ -173,6 +174,8 @@ function fullUrl(file: string) {
       class="absolute right-4 text-white/40 hover:text-white text-3xl leading-none transition-colors px-5 py-10"
       aria-label="Next photo"
     >&#x203A;</button>
+
+    <p id="lightbox-counter" class="absolute bottom-5 left-0 right-0 text-center text-xs text-white/40 select-none"></p>
   </div>
 </BaseLayout>
 
@@ -247,7 +250,8 @@ function fullUrl(file: string) {
       loadMoreCount.textContent = `${loadedThumbCount} of ${allPhotos.length} photos`;
     } else {
       loadMoreBtn.style.display = 'none';
-      loadMoreCount.style.display = 'none';
+      loadMoreCount.style.display = 'block';
+      loadMoreCount.textContent = `${allPhotos.length} photos`;
     }
   }
 
@@ -317,6 +321,8 @@ function fullUrl(file: string) {
   // src we: (1) show the loader, (2) wire up the onload handler that fades the
   // image in and hides the loader, THEN (3) set src. Order matters — onload
   // must be assigned before src or it can miss the event on cached images.
+  const lightboxCounter = document.getElementById('lightbox-counter');
+
   function setLightboxImage(src, alt) {
     lightboxImg.classList.add('opacity-0');
     lightboxLoader.classList.remove('hidden');
@@ -326,6 +332,7 @@ function fullUrl(file: string) {
     };
     lightboxImg.src = src;
     lightboxImg.alt = alt;
+    lightboxCounter.textContent = `${activeIndex + 1} / ${allPhotos.length}`;
   }
 
   window.openLightbox = function() {
