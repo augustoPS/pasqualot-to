@@ -63,7 +63,7 @@ function fullUrl(file: string) {
           id="preview-img"
           src={fullUrl(previewPhotos[0].file)}
           alt={previewPhotos[0].alt}
-          class="w-full object-contain max-h-[70vh]"
+          class="w-full object-contain max-h-[55vh] sm:max-h-[70vh] transition-opacity duration-200"
         />
       </button>
 
@@ -115,8 +115,9 @@ function fullUrl(file: string) {
             autocomplete="current-password"
           />
           <button
+            id="unlock-btn"
             type="submit"
-            class="px-6 py-2 text-sm bg-white text-black hover:bg-[var(--color-text)] transition-colors"
+            class="px-6 py-2 text-sm bg-white text-black hover:bg-[var(--color-text)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Unlock
           </button>
@@ -134,10 +135,38 @@ function fullUrl(file: string) {
     aria-modal="true"
     aria-label="Photo lightbox"
   >
-    <button id="lightbox-close" class="absolute top-5 right-6 text-white/50 hover:text-white text-2xl leading-none transition-colors" aria-label="Close">&#x2715;</button>
-    <button id="lightbox-prev" class="absolute left-4 text-white/40 hover:text-white text-3xl leading-none transition-colors px-2 py-4" aria-label="Previous photo">&#x2039;</button>
-    <img id="lightbox-img" src="" alt="" class="max-h-[90vh] max-w-[90vw] object-contain select-none" />
-    <button id="lightbox-next" class="absolute right-4 text-white/40 hover:text-white text-3xl leading-none transition-colors px-2 py-4" aria-label="Next photo">&#x203A;</button>
+    <button
+      id="lightbox-close"
+      class="absolute top-5 right-6 text-white/50 hover:text-white text-2xl leading-none transition-colors"
+      aria-label="Close"
+    >&#x2715;</button>
+
+    <!-- ↑ Expanded tap targets per UX spec 2.3: px-5 py-10 (was px-2 py-4, ~24×56px → ~56×88px) -->
+    <button
+      id="lightbox-prev"
+      class="absolute left-4 text-white/40 hover:text-white text-3xl leading-none transition-colors px-5 py-10"
+      aria-label="Previous photo"
+    >&#x2039;</button>
+
+    <div class="relative flex items-center justify-center">
+      <!-- Loading indicator: visible while lightbox image is loading (spec 2.2) -->
+      <span
+        id="lightbox-loader"
+        class="absolute text-white/30 text-xs tracking-widest animate-pulse select-none hidden"
+      >loading</span>
+      <img
+        id="lightbox-img"
+        src=""
+        alt=""
+        class="max-h-[90vh] max-w-[90vw] object-contain select-none opacity-0 transition-opacity duration-300"
+      />
+    </div>
+
+    <button
+      id="lightbox-next"
+      class="absolute right-4 text-white/40 hover:text-white text-3xl leading-none transition-colors px-5 py-10"
+      aria-label="Next photo"
+    >&#x203A;</button>
   </div>
 </BaseLayout>
 
@@ -147,9 +176,9 @@ function fullUrl(file: string) {
   let loadedThumbCount = 0;
   let activeIndex = 0;
 
-  const previewImg  = document.getElementById('preview-img');
-  const strip       = document.getElementById('thumb-strip');
-  const loadMoreBtn = document.getElementById('load-more-btn');
+  const previewImg    = document.getElementById('preview-img');
+  const strip         = document.getElementById('thumb-strip');
+  const loadMoreBtn   = document.getElementById('load-more-btn');
   const loadMoreCount = document.getElementById('load-more-count');
 
   // Collect initially rendered preview photos
@@ -158,11 +187,24 @@ function fullUrl(file: string) {
   });
   loadedThumbCount = allPhotos.length;
 
+  // ─── BLOCKER 2.1: Preview image loading opacity ───────────────────────────
+  // When a thumbnail is clicked and selectPhoto() runs, we immediately set
+  // opacity-50 on #preview-img (within the same tick) so the user sees visible
+  // feedback while the new full-res image is fetching. The opacity clears the
+  // moment the browser fires the load event. If the image was already cached,
+  // the flash is imperceptible. onload is assigned BEFORE src so it fires even
+  // when the image loads synchronously from cache.
   function selectPhoto(index) {
     activeIndex = index;
     const photo = allPhotos[index];
+
+    // Dim immediately — signals "something is loading"
+    previewImg.classList.add('opacity-50');
+    // Wire up the clear-on-load handler before assigning src
+    previewImg.onload = () => previewImg.classList.remove('opacity-50');
     previewImg.src = photo.src;
     previewImg.alt = photo.alt;
+
     document.querySelectorAll('.thumb').forEach(btn => {
       const active = Number(btn.dataset.index) === index;
       btn.classList.toggle('ring-1', active);
@@ -213,16 +255,34 @@ function fullUrl(file: string) {
     btn.addEventListener('click', () => selectPhoto(Number(btn.dataset.index)));
   });
 
-  // Lightbox
-  const lightbox    = document.getElementById('lightbox');
-  const lightboxImg = document.getElementById('lightbox-img');
+  // ─── LIGHTBOX ─────────────────────────────────────────────────────────────
+
+  const lightbox      = document.getElementById('lightbox');
+  const lightboxImg   = document.getElementById('lightbox-img');
+  const lightboxLoader = document.getElementById('lightbox-loader');
+
+  // ─── BLOCKER 2.2: Lightbox image loading fade ────────────────────────────
+  // lightboxImg starts at opacity-0 (set in markup). Before assigning a new
+  // src we: (1) show the loader, (2) wire up the onload handler that fades the
+  // image in and hides the loader, THEN (3) set src. Order matters — onload
+  // must be assigned before src or it can miss the event on cached images.
+  function setLightboxImage(src, alt) {
+    lightboxImg.classList.add('opacity-0');
+    lightboxLoader.classList.remove('hidden');
+    lightboxImg.onload = () => {
+      lightboxImg.classList.remove('opacity-0');
+      lightboxLoader.classList.add('hidden');
+    };
+    lightboxImg.src = src;
+    lightboxImg.alt = alt;
+  }
 
   window.openLightbox = function() {
-    lightboxImg.src = allPhotos[activeIndex].src;
-    lightboxImg.alt = allPhotos[activeIndex].alt;
     lightbox.classList.remove('hidden');
     lightbox.classList.add('flex');
     document.body.style.overflow = 'hidden';
+    setLightboxImage(allPhotos[activeIndex].src, allPhotos[activeIndex].alt);
+    document.getElementById('lightbox-close').focus();
   };
 
   function closeLightbox() {
@@ -233,15 +293,13 @@ function fullUrl(file: string) {
 
   function lightboxPrev() {
     activeIndex = (activeIndex - 1 + allPhotos.length) % allPhotos.length;
-    lightboxImg.src = allPhotos[activeIndex].src;
-    lightboxImg.alt = allPhotos[activeIndex].alt;
+    setLightboxImage(allPhotos[activeIndex].src, allPhotos[activeIndex].alt);
     selectPhoto(activeIndex);
   }
 
   function lightboxNext() {
     activeIndex = (activeIndex + 1) % allPhotos.length;
-    lightboxImg.src = allPhotos[activeIndex].src;
-    lightboxImg.alt = allPhotos[activeIndex].alt;
+    setLightboxImage(allPhotos[activeIndex].src, allPhotos[activeIndex].alt);
     selectPhoto(activeIndex);
   }
 
@@ -256,7 +314,8 @@ function fullUrl(file: string) {
     if (e.key === 'ArrowRight') lightboxNext();
   });
 
-  // Password gate
+  // ─── PASSWORD GATE ────────────────────────────────────────────────────────
+
   if (isProtected) {
     const storageKey = `unlocked:${albumId}`;
 
@@ -281,21 +340,42 @@ function fullUrl(file: string) {
 
     if (sessionStorage.getItem(storageKey) === 'true') unlock();
 
+    // ─── BLOCKER 2.7: Password gate button loading state ──────────────────
+    // On submit: immediately disable the button and change its label to
+    // "Unlocking…" so the user knows the request is in-flight and cannot
+    // multi-submit during the server's enforced 1s delay. The button is only
+    // re-enabled on failure (so the user can try again). On success we leave
+    // it disabled — the gate hides anyway, so re-enabling is pointless.
     document.getElementById('password-form').addEventListener('submit', async (e) => {
       e.preventDefault();
+      const btn = document.getElementById('unlock-btn');
+      btn.disabled = true;
+      btn.textContent = 'Unlocking…';
+
       const input = document.getElementById('password-input').value;
       const res = await fetch('/api/auth/album', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ album: albumId, password: input }),
       });
+
       if (res.ok) {
+        // Keep button disabled — gate will hide once fetchAndUnlock() resolves
         sessionStorage.setItem(storageKey, 'true');
         unlock();
       } else {
+        // Restore button so user can try again
+        btn.disabled = false;
+        btn.textContent = 'Unlock';
         const err = document.getElementById('password-error');
         err.classList.remove('hidden');
         document.getElementById('password-input').value = '';
+        // Clear error on retype (bonus: 2.8)
+        document.getElementById('password-input').addEventListener(
+          'input',
+          () => err.classList.add('hidden'),
+          { once: true }
+        );
       }
     });
   }
