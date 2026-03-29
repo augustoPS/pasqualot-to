@@ -1,5 +1,8 @@
 # build output
 dist/
+
+# generated thumbnails (produced by scripts/gen-thumbs.mjs at build time)
+public/photos/*/thumbs/
 # generated types
 .astro/
 

@@ -25,7 +25,10 @@ const lockedCount = isProtected ? Math.max(0, photos.length - previewCount) : 0;
 const previewFiles = new Set(previewPhotos.map(p => p.file));
 
 function thumbUrl(file: string) {
-  if (!isProtected || previewFiles.has(file)) return `/api/thumbs/${album.id}/${file}?w=300`;
+  if (!isProtected || previewFiles.has(file)) {
+    const jpg = file.replace(/\.[^.]+$/, '.jpg');
+    return `/photos/${album.id}/thumbs/${jpg}`;
+  }
   return `/api/photos/${album.id}/${file}?w=300`;
 }
 function fullUrl(file: string) {
