@@ -38,24 +38,26 @@ function fullUrl(file: string) {
 ---
 
 <BaseLayout title={title} description={description} ogImage={ogImage}>
-  <div class="max-w-5xl mx-auto px-6 py-12">
+  <div class="max-w-5xl mx-auto px-6">
 
-    <!-- Album header -->
-    <div class="mb-8">
-      <h1 class="text-2xl font-medium text-[var(--color-accent)]">{title}</h1>
-      <p class="text-sm text-[var(--color-muted)] mt-1">
-        {location ? `${location}, ` : ''}{year}
-      </p>
-      {description && (
-        <p class="text-sm text-[var(--color-text)] mt-3 max-w-xl">{description}</p>
-      )}
-    </div>
+    <!-- Sticky preview window: header + photo stay fixed while thumbs scroll below -->
+    <div class="sticky top-0 z-10 bg-[var(--color-bg)] pt-8 pb-4 border-b border-[var(--color-border)]">
 
-    <!-- Centered preview -->
-    <div class="flex flex-col items-center gap-6">
+      <!-- Album header -->
+      <div class="mb-4">
+        <h1 class="text-2xl font-medium text-[var(--color-accent)]">{title}</h1>
+        <p class="text-sm text-[var(--color-muted)] mt-1">
+          {location ? `${location}, ` : ''}{year}
+        </p>
+        {description && (
+          <p class="text-sm text-[var(--color-text)] mt-2 max-w-xl">{description}</p>
+        )}
+      </div>
+
+      <!-- Preview image -->
       <button
         id="preview-btn"
-        class="w-full max-w-2xl cursor-zoom-in block"
+        class="w-full max-w-2xl mx-auto cursor-zoom-in block"
         aria-label="View photo fullscreen"
         onclick="openLightbox()"
       >
@@ -63,12 +65,16 @@ function fullUrl(file: string) {
           id="preview-img"
           src={fullUrl(previewPhotos[0].file)}
           alt={previewPhotos[0].alt}
-          class="w-full object-contain max-h-[55vh] sm:max-h-[70vh] transition-opacity duration-200"
+          class="w-full object-contain max-h-[45vh] sm:max-h-[55vh] transition-opacity duration-200"
         />
       </button>
+    </div>
+
+    <!-- Scrollable area: thumbnail strip + gate -->
+    <div class="pt-6 pb-16">
 
       <!-- Thumbnail strip -->
-      <div class="w-full flex flex-col items-center gap-3">
+      <div class="flex flex-col items-center gap-3">
         <div id="thumb-strip" class="flex gap-2 justify-center flex-wrap">
           {previewPhotos.map((photo, i) => (
             <button
@@ -97,34 +103,34 @@ function fullUrl(file: string) {
         </button>
         <p id="load-more-count" class="text-xs text-[var(--color-muted)]" style="display:none"></p>
       </div>
-    </div>
 
-    <!-- Password gate -->
-    {isProtected && lockedCount > 0 && (
-      <div id="password-gate" class="mt-10 border border-[var(--color-border)] p-8 text-center">
-        <p class="text-sm text-[var(--color-muted)] mb-1">
-          {lockedCount} more photo{lockedCount !== 1 ? 's' : ''}
-        </p>
-        <p class="text-base text-[var(--color-text)] mb-6">Enter the password to view the full album</p>
-        <form id="password-form" class="flex flex-col sm:flex-row gap-3 justify-center max-w-sm mx-auto">
-          <input
-            type="password"
-            id="password-input"
-            placeholder="Password"
-            class="flex-1 bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] px-4 py-2 text-sm outline-none focus:border-[var(--color-muted)] placeholder:text-[var(--color-muted)]"
-            autocomplete="current-password"
-          />
-          <button
-            id="unlock-btn"
-            type="submit"
-            class="px-6 py-2 text-sm bg-white text-black hover:bg-[var(--color-text)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Unlock
-          </button>
-        </form>
-        <p id="password-error" class="text-xs text-red-400 mt-3 hidden">Incorrect password.</p>
-      </div>
-    )}
+      <!-- Password gate -->
+      {isProtected && lockedCount > 0 && (
+        <div id="password-gate" class="mt-10 border border-[var(--color-border)] p-8 text-center">
+          <p class="text-sm text-[var(--color-muted)] mb-1">
+            {lockedCount} more photo{lockedCount !== 1 ? 's' : ''}
+          </p>
+          <p class="text-base text-[var(--color-text)] mb-6">Enter the password to view the full album</p>
+          <form id="password-form" class="flex flex-col sm:flex-row gap-3 justify-center max-w-sm mx-auto">
+            <input
+              type="password"
+              id="password-input"
+              placeholder="Password"
+              class="flex-1 bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] px-4 py-2 text-sm outline-none focus:border-[var(--color-muted)] placeholder:text-[var(--color-muted)]"
+              autocomplete="current-password"
+            />
+            <button
+              id="unlock-btn"
+              type="submit"
+              class="px-6 py-2 text-sm bg-white text-black hover:bg-[var(--color-text)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Unlock
+            </button>
+          </form>
+          <p id="password-error" class="text-xs text-red-400 mt-3 hidden">Incorrect password.</p>
+        </div>
+      )}
+    </div>
   </div>
 
   <!-- Lightbox -->
@@ -354,6 +360,21 @@ function fullUrl(file: string) {
   document.getElementById('lightbox-prev').addEventListener('click', lightboxPrev);
   document.getElementById('lightbox-next').addEventListener('click', lightboxNext);
   lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
+
+  // ── Swipe to navigate on mobile ──────────────────────────────────────────
+  let swipeStartX = null;
+  const SWIPE_THRESHOLD = 50;
+  lightbox.addEventListener('touchstart', (e) => {
+    swipeStartX = e.touches[0].clientX;
+  }, { passive: true });
+  lightbox.addEventListener('touchend', (e) => {
+    if (swipeStartX === null) return;
+    const delta = e.changedTouches[0].clientX - swipeStartX;
+    swipeStartX = null;
+    if (Math.abs(delta) < SWIPE_THRESHOLD) return;
+    if (delta < 0) lightboxNext();
+    else lightboxPrev();
+  }, { passive: true });
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && !lightbox.classList.contains('hidden')) {
       closeLightbox();
