@@ -465,9 +465,29 @@ function fullUrl(file: string) {
       return true;
     }
 
-    async function unlock() {
+    function showGateError(msg) {
+      // Re-show the gate if it was hidden (e.g. token expired on return visit)
+      if (gate) {
+        gate.style.opacity = '1';
+        gate.style.display = '';
+        document.body.style.overflow = 'hidden';
+      }
+      const btn = document.getElementById('unlock-btn');
+      if (btn) { btn.disabled = false; btn.textContent = 'Unlock'; }
+      const err = document.getElementById('password-error');
+      if (err) { err.textContent = msg; err.classList.remove('hidden'); }
+    }
+
+    async function unlock(fromSessionStorage = false) {
       const ok = await fetchAndUnlock();
-      if (!ok) return;
+      if (!ok) {
+        if (fromSessionStorage) {
+          // Token likely expired — clear flag so gate prompts fresh
+          sessionStorage.removeItem(storageKey);
+        }
+        showGateError('Something went wrong. Please try again.');
+        return;
+      }
       document.body.style.overflow = '';
       if (gate) {
         gate.style.opacity = '0';
@@ -476,7 +496,7 @@ function fullUrl(file: string) {
       document.getElementById('preview-btn')?.focus();
     }
 
-    if (alreadyUnlocked) unlock();
+    if (alreadyUnlocked) unlock(true);
 
     // ─── BLOCKER 2.7: Password gate button loading state ──────────────────
     // On submit: immediately disable the button and change its label to
