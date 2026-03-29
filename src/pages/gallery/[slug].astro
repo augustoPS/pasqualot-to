@@ -345,7 +345,15 @@ function fullUrl(file: string) {
     lightboxCounter.textContent = `${activeIndex + 1} / ${allPhotos.length}`;
   }
 
+  // ── Lightbox focus trap (2.4) ─────────────────────────────────────────────
+  // Focusable elements inside the lightbox. Tab cycles only within these;
+  // focus returns to the opener element when the lightbox closes.
+  const lightboxFocusable = ['lightbox-close', 'lightbox-prev', 'lightbox-next']
+    .map(id => document.getElementById(id));
+  let lightboxOpener = null;
+
   window.openLightbox = function() {
+    lightboxOpener = document.activeElement;
     lightbox.classList.remove('hidden');
     lightbox.classList.add('flex');
     document.body.style.overflow = 'hidden';
@@ -357,7 +365,20 @@ function fullUrl(file: string) {
     lightbox.classList.add('hidden');
     lightbox.classList.remove('flex');
     document.body.style.overflow = '';
+    if (lightboxOpener) { lightboxOpener.focus(); lightboxOpener = null; }
   }
+
+  // Trap Tab/Shift+Tab within the lightbox
+  lightbox.addEventListener('keydown', (e) => {
+    if (e.key !== 'Tab') return;
+    const first = lightboxFocusable[0];
+    const last  = lightboxFocusable[lightboxFocusable.length - 1];
+    if (e.shiftKey) {
+      if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+    } else {
+      if (document.activeElement === last)  { e.preventDefault(); first.focus(); }
+    }
+  });
 
   function lightboxPrev() {
     activeIndex = (activeIndex - 1 + allPhotos.length) % allPhotos.length;

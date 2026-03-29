@@ -15,7 +15,7 @@ const albums = (await getCollection('albums')).sort(
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {albums.map((album) => (
           <a href={`/gallery/${album.id}`} class="group block overflow-hidden bg-[var(--color-surface)]">
-            <div class="aspect-square overflow-hidden relative">
+            <div class="aspect-[4/3] overflow-hidden relative">
               <img
                 src={`/photos/${album.id}/${album.data.cover}`}
                 alt={album.data.title}
