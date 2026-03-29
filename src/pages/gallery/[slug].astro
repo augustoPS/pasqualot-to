@@ -76,11 +76,11 @@ function fullUrl(file: string) {
 
       <!-- Thumbnail strip -->
       <div class="flex flex-col items-center gap-3">
-        <div id="thumb-strip" class="flex gap-2 justify-center flex-wrap">
+        <div id="thumb-strip" class="flex gap-2 flex-nowrap overflow-x-auto w-full sm:flex-wrap sm:justify-center snap-x snap-mandatory">
           {previewPhotos.map((photo, i) => (
             <button
               class:list={[
-                'thumb flex-shrink-0 w-16 h-16 overflow-hidden transition-opacity duration-150',
+                'thumb flex-shrink-0 w-16 h-16 overflow-hidden transition-opacity duration-150 snap-start',
                 i === 0 ? 'ring-1 ring-[var(--color-accent)] opacity-100' : 'opacity-40 hover:opacity-80'
               ]}
               data-src={fullUrl(photo.file)}
@@ -179,6 +179,12 @@ function fullUrl(file: string) {
   </div>
 </BaseLayout>
 
+<style>
+  /* Hide scrollbar on thumb strip — scrollable but clean */
+  #thumb-strip { scrollbar-width: none; }
+  #thumb-strip::-webkit-scrollbar { display: none; }
+</style>
+
 <script define:vars={{ isProtected, albumId: album.id, previewCount, isProtectedAlbum: isProtected }}>
   const THUMB_PAGE = 20;
   let allPhotos = []; // all photos available (preview + unlocked)
@@ -216,6 +222,10 @@ function fullUrl(file: string) {
 
     schedulePreload(index);
 
+    // Scroll active thumb into view on the horizontal strip (mobile)
+    const activeBtn = strip.querySelector(`[data-index="${index}"]`);
+    if (activeBtn) activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+
     document.querySelectorAll('.thumb').forEach(btn => {
       const active = Number(btn.dataset.index) === index;
       btn.classList.toggle('ring-1', active);
@@ -227,7 +237,7 @@ function fullUrl(file: string) {
 
   function addThumb(photo, index) {
     const btn = document.createElement('button');
-    btn.className = 'thumb flex-shrink-0 w-16 h-16 overflow-hidden transition-opacity duration-150 opacity-40 hover:opacity-80';
+    btn.className = 'thumb flex-shrink-0 w-16 h-16 overflow-hidden transition-opacity duration-150 opacity-40 hover:opacity-80 snap-start';
     btn.dataset.src   = photo.src;
     btn.dataset.alt   = photo.alt;
     btn.dataset.index = String(index);
