@@ -355,10 +355,15 @@ function fullUrl(file: string) {
   document.getElementById('lightbox-next').addEventListener('click', lightboxNext);
   lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
   document.addEventListener('keydown', (e) => {
-    if (lightbox.classList.contains('hidden')) return;
-    if (e.key === 'Escape') closeLightbox();
-    if (e.key === 'ArrowLeft') lightboxPrev();
-    if (e.key === 'ArrowRight') lightboxNext();
+    if (e.key === 'Escape' && !lightbox.classList.contains('hidden')) {
+      closeLightbox();
+    } else if (e.key === 'ArrowLeft') {
+      if (!lightbox.classList.contains('hidden')) lightboxPrev();
+      else selectPhoto((activeIndex - 1 + allPhotos.length) % allPhotos.length);
+    } else if (e.key === 'ArrowRight') {
+      if (!lightbox.classList.contains('hidden')) lightboxNext();
+      else selectPhoto((activeIndex + 1) % allPhotos.length);
+    }
   });
 
   // ─── PASSWORD GATE ────────────────────────────────────────────────────────
