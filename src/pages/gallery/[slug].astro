@@ -55,84 +55,96 @@ function fullUrl(file: string) {
         )}
       </div>
 
-      <!-- Preview image -->
-      <button
-        id="preview-btn"
-        class="w-full max-w-2xl mx-auto cursor-zoom-in block"
-        aria-label="View photo fullscreen"
-        onclick="openLightbox()"
-      >
-        <img
-          id="preview-img"
-          src={fullUrl(previewPhotos[0].file)}
-          alt={previewPhotos[0].alt}
-          class="w-full object-contain max-h-[45vh] sm:max-h-[55vh] transition-opacity duration-200"
-        />
-      </button>
-    </div>
-
-    <!-- Scrollable area: thumbnail strip + gate -->
-    <div class="pt-6 pb-16">
-
-      <!-- Thumbnail strip -->
-      <div class="flex flex-col items-center gap-3">
-        <div id="thumb-strip" class="flex gap-2 flex-nowrap overflow-x-auto w-full sm:flex-wrap sm:justify-center snap-x snap-mandatory">
-          {previewPhotos.map((photo, i) => (
-            <button
-              class:list={[
-                'thumb flex-shrink-0 w-16 h-16 overflow-hidden transition-opacity duration-150 snap-start',
-                i === 0 ? 'ring-1 ring-[var(--color-accent)] opacity-100' : 'opacity-40 hover:opacity-80'
-              ]}
-              data-src={fullUrl(photo.file)}
-              data-alt={photo.alt}
-              data-index={i}
-              aria-label={`View ${photo.alt}`}
-            >
-              <img src={thumbUrl(photo.file)} alt={photo.alt} class="w-full h-full object-cover" loading="lazy" />
-            </button>
-          ))}
-          <!-- Locked thumbs injected here after auth -->
-        </div>
+      <!-- Preview image with mobile prev/next arrows -->
+      <div class="relative w-full max-w-2xl mx-auto">
+        <button
+          id="preview-prev"
+          class="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-11 h-11 flex items-center justify-center text-white/60 hover:text-white bg-black/30 hover:bg-black/60 transition-colors sm:hidden"
+          aria-label="Previous photo"
+          onclick="previewNavigate(-1)"
+        >&#x2039;</button>
 
         <button
-          id="load-more-btn"
-          class="text-xs text-[var(--color-muted)] hover:text-[var(--color-text)] border border-[var(--color-border)] hover:border-[var(--color-muted)] px-4 py-1.5 transition-colors"
-          style="display:none"
-          onclick="loadMoreThumbs()"
+          id="preview-btn"
+          class="w-full cursor-zoom-in block"
+          aria-label="View photo fullscreen"
+          onclick="openLightbox()"
         >
-          Load more
+          <img
+            id="preview-img"
+            src={fullUrl(previewPhotos[0].file)}
+            alt={previewPhotos[0].alt}
+            class="w-full object-contain max-h-[45vh] sm:max-h-[70vh] transition-opacity duration-200"
+          />
         </button>
-        <p id="load-more-count" class="text-xs text-[var(--color-muted)]" style="display:none"></p>
-      </div>
 
-      <!-- Password gate -->
-      {isProtected && lockedCount > 0 && (
-        <div id="password-gate" class="mt-10 border border-[var(--color-border)] p-8 text-center">
-          <p class="text-sm text-[var(--color-muted)] mb-1">
-            {lockedCount} more photo{lockedCount !== 1 ? 's' : ''}
-          </p>
-          <p class="text-base text-[var(--color-text)] mb-6">Enter the password to view the full album</p>
-          <form id="password-form" class="flex flex-col sm:flex-row gap-3 justify-center max-w-sm mx-auto">
-            <input
-              type="password"
-              id="password-input"
-              placeholder="Password"
-              class="flex-1 bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] px-4 py-2 text-sm outline-none focus:border-[var(--color-muted)] placeholder:text-[var(--color-muted)]"
-              autocomplete="current-password"
-            />
-            <button
-              id="unlock-btn"
-              type="submit"
-              class="px-6 py-2 text-sm bg-white text-black hover:bg-[var(--color-text)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Unlock
-            </button>
-          </form>
-          <p id="password-error" class="text-xs text-red-400 mt-3 hidden">Incorrect password.</p>
-        </div>
-      )}
+        <button
+          id="preview-next"
+          class="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-11 h-11 flex items-center justify-center text-white/60 hover:text-white bg-black/30 hover:bg-black/60 transition-colors sm:hidden"
+          aria-label="Next photo"
+          onclick="previewNavigate(1)"
+        >&#x203A;</button>
+      </div>
+    </div>
+
+    <!-- Thumbnail strip -->
+    <div class="pt-6 pb-8 flex flex-col items-center gap-3">
+      <div id="thumb-strip" class="flex gap-2 flex-nowrap overflow-x-auto w-full sm:flex-wrap sm:justify-center snap-x snap-mandatory">
+        {previewPhotos.map((photo, i) => (
+          <button
+            class:list={[
+              'thumb flex-shrink-0 w-16 h-16 overflow-hidden transition-opacity duration-150 snap-start',
+              i === 0 ? 'ring-1 ring-[var(--color-accent)] opacity-100' : 'opacity-40 hover:opacity-80'
+            ]}
+            data-src={fullUrl(photo.file)}
+            data-alt={photo.alt}
+            data-index={i}
+            aria-label={`View ${photo.alt}`}
+          >
+            <img src={thumbUrl(photo.file)} alt={photo.alt} class="w-full h-full object-cover" loading="lazy" />
+          </button>
+        ))}
+        <!-- Locked thumbs injected here after auth -->
+      </div>
+      <p id="photo-count" class="text-xs text-[var(--color-muted)]"></p>
     </div>
   </div>
+
+  <!-- Password gate: fixed overlay, keeps page scroll-free -->
+  {isProtected && lockedCount > 0 && (
+    <div
+      id="password-gate"
+      class="fixed inset-0 z-40 flex items-center justify-center bg-black/70 backdrop-blur-sm transition-opacity duration-200"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Album password"
+    >
+      <div class="bg-[var(--color-bg)] border border-[var(--color-border)] p-8 w-full max-w-sm mx-4 text-center">
+        <p class="text-sm text-[var(--color-muted)] mb-1">
+          {lockedCount} more photo{lockedCount !== 1 ? 's' : ''}
+        </p>
+        <p class="text-base text-[var(--color-text)] mb-6">Enter the password to view the full album</p>
+        <form id="password-form" class="flex flex-col sm:flex-row gap-3 justify-center">
+          <input
+            type="password"
+            id="password-input"
+            placeholder="Password"
+            class="flex-1 bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] px-4 py-2 text-sm outline-none focus:border-[var(--color-muted)] placeholder:text-[var(--color-muted)]"
+            autocomplete="current-password"
+            autofocus
+          />
+          <button
+            id="unlock-btn"
+            type="submit"
+            class="px-6 py-2 text-sm bg-white text-black hover:bg-[var(--color-text)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Unlock
+          </button>
+        </form>
+        <p id="password-error" class="text-xs text-red-400 mt-3 hidden">Incorrect password.</p>
+      </div>
+    </div>
+  )}
 
   <!-- Lightbox -->
   <div
@@ -186,21 +198,27 @@ function fullUrl(file: string) {
 </style>
 
 <script define:vars={{ isProtected, albumId: album.id, previewCount, isProtectedAlbum: isProtected }}>
-  const THUMB_PAGE = 20;
   let allPhotos = []; // all photos available (preview + unlocked)
-  let loadedThumbCount = 0;
   let activeIndex = 0;
 
-  const previewImg    = document.getElementById('preview-img');
-  const strip         = document.getElementById('thumb-strip');
-  const loadMoreBtn   = document.getElementById('load-more-btn');
-  const loadMoreCount = document.getElementById('load-more-count');
+  const previewImg  = document.getElementById('preview-img');
+  const strip       = document.getElementById('thumb-strip');
+  const photoCount  = document.getElementById('photo-count');
+  const previewPrev = document.getElementById('preview-prev');
+  const previewNext = document.getElementById('preview-next');
+
+  // Show loading state for the initial preview image if it hasn't loaded yet
+  if (!previewImg.complete) {
+    previewImg.classList.add('opacity-50');
+    previewImg.addEventListener('load', () => previewImg.classList.remove('opacity-50'), { once: true });
+  }
 
   // Collect initially rendered preview photos
   document.querySelectorAll('.thumb').forEach(btn => {
     allPhotos.push({ src: btn.dataset.src, alt: btn.dataset.alt, thumbSrc: btn.querySelector('img')?.src });
   });
-  loadedThumbCount = allPhotos.length;
+  updatePhotoCount();
+  updatePreviewArrows();
 
   // ─── BLOCKER 2.1: Preview image loading opacity ───────────────────────────
   // When a thumbnail is clicked and selectPhoto() runs, we immediately set
@@ -235,6 +253,22 @@ function fullUrl(file: string) {
     });
   }
 
+  function updatePhotoCount() {
+    if (!photoCount) return;
+    photoCount.textContent = `${allPhotos.length} photo${allPhotos.length !== 1 ? 's' : ''}`;
+  }
+
+  function updatePreviewArrows() {
+    if (!previewPrev || !previewNext) return;
+    const hide = allPhotos.length <= 1;
+    previewPrev.style.display = hide ? 'none' : '';
+    previewNext.style.display = hide ? 'none' : '';
+  }
+
+  window.previewNavigate = function(dir) {
+    selectPhoto((activeIndex + dir + allPhotos.length) % allPhotos.length);
+  };
+
   function addThumb(photo, index) {
     const btn = document.createElement('button');
     btn.className = 'thumb flex-shrink-0 w-16 h-16 overflow-hidden transition-opacity duration-150 opacity-40 hover:opacity-80 snap-start';
@@ -251,26 +285,6 @@ function fullUrl(file: string) {
     btn.addEventListener('click', () => selectPhoto(index));
     strip.appendChild(btn);
   }
-
-  function updateLoadMore() {
-    const remaining = allPhotos.length - loadedThumbCount;
-    if (remaining > 0) {
-      loadMoreBtn.style.display = 'block';
-      loadMoreCount.style.display = 'block';
-      loadMoreCount.textContent = `${loadedThumbCount} of ${allPhotos.length} photos`;
-    } else {
-      loadMoreBtn.style.display = 'none';
-      loadMoreCount.style.display = 'block';
-      loadMoreCount.textContent = `${allPhotos.length} photos`;
-    }
-  }
-
-  window.loadMoreThumbs = function() {
-    const batch = allPhotos.slice(loadedThumbCount, loadedThumbCount + THUMB_PAGE);
-    batch.forEach((photo, i) => addThumb(photo, loadedThumbCount + i));
-    loadedThumbCount += batch.length;
-    updateLoadMore();
-  };
 
   // Bind existing thumbs
   document.querySelectorAll('.thumb').forEach(btn => {
@@ -429,28 +443,40 @@ function fullUrl(file: string) {
 
   if (isProtected) {
     const storageKey = `unlocked:${albumId}`;
+    const gate = document.getElementById('password-gate');
+
+    // Keep page scroll locked while gate is visible (skip if already unlocked via session)
+    const alreadyUnlocked = sessionStorage.getItem(storageKey) === 'true';
+    if (gate && !alreadyUnlocked) document.body.style.overflow = 'hidden';
 
     async function fetchAndUnlock() {
       const res = await fetch(`/api/albums/${albumId}/photos`);
       if (!res.ok) return false;
       const { photos: locked } = await res.json();
-      locked.forEach(p => allPhotos.push({
-        src: p.src,
-        thumbSrc: `${p.src}?w=300`,
-        alt: p.alt,
-      }));
-      updateLoadMore();
-      schedulePreload(activeIndex); // re-queue now that full photo list is available
+      const startIndex = allPhotos.length;
+      locked.forEach((p, i) => {
+        const photo = { src: p.src, thumbSrc: `${p.src}?w=300`, alt: p.alt };
+        allPhotos.push(photo);
+        addThumb(photo, startIndex + i);
+      });
+      updatePhotoCount();
+      updatePreviewArrows();
+      schedulePreload(activeIndex);
       return true;
     }
 
     async function unlock() {
       const ok = await fetchAndUnlock();
       if (!ok) return;
-      document.getElementById('password-gate').classList.add('hidden');
+      document.body.style.overflow = '';
+      if (gate) {
+        gate.style.opacity = '0';
+        setTimeout(() => gate.remove(), 200);
+      }
+      document.getElementById('preview-btn')?.focus();
     }
 
-    if (sessionStorage.getItem(storageKey) === 'true') unlock();
+    if (alreadyUnlocked) unlock();
 
     // ─── BLOCKER 2.7: Password gate button loading state ──────────────────
     // On submit: immediately disable the button and change its label to
