@@ -5,33 +5,132 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 const albums = (await getCollection('albums')).sort(
   (a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime()
 );
+
+const albumData = albums.map(a => ({
+  id: a.id,
+  title: a.data.title,
+  location: a.data.location ?? null,
+  year: new Date(a.data.date).getFullYear(),
+  cover: `/photos/${a.id}/${a.data.cover}`,
+  href: `/gallery/${a.id}`,
+}));
 ---
 
 <BaseLayout>
-  <section class="max-w-5xl mx-auto px-6 py-12">
-    {albums.length === 0 ? (
+  {albums.length === 0 ? (
+    <section class="max-w-5xl mx-auto px-6 py-12">
       <p class="text-[var(--color-muted)] text-sm">No albums yet.</p>
-    ) : (
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {albums.map((album) => (
-          <a href={`/gallery/${album.id}`} class="group block overflow-hidden bg-[var(--color-surface)]">
-            <div class="aspect-square overflow-hidden">
-              <img
-                src={`/photos/${album.id}/${album.data.cover}`}
-                alt={album.data.title}
-                class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                loading="lazy"
-              />
-            </div>
-            <div class="px-3 py-3">
-              <p class="text-sm font-medium text-[var(--color-text)]">{album.data.title}</p>
-              <p class="text-xs text-[var(--color-muted)] mt-0.5">
-                {album.data.location ?? new Date(album.data.date).getFullYear()}
-              </p>
-            </div>
-          </a>
-        ))}
+    </section>
+  ) : (
+    <section class="max-w-5xl mx-auto px-6 py-12 flex flex-col items-center gap-10">
+
+      <!-- Centered preview -->
+      <a id="preview-link" href={albumData[0].href} class="group block w-full max-w-2xl">
+        <div class="overflow-hidden aspect-[4/3]">
+          <img
+            id="preview-img"
+            src={albumData[0].cover}
+            alt={albumData[0].title}
+            class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        </div>
+        <div class="mt-4 text-center">
+          <p id="preview-title" class="text-lg font-medium text-[var(--color-accent)]">{albumData[0].title}</p>
+          <p id="preview-meta" class="text-sm text-[var(--color-muted)] mt-1">
+            {albumData[0].location ? `${albumData[0].location}, ` : ''}{albumData[0].year}
+          </p>
+        </div>
+      </a>
+
+      <!-- Navigator strip -->
+      <div class="w-full flex flex-col items-center gap-4">
+        <div id="nav-strip" class="flex gap-2 justify-center flex-wrap">
+          {albumData.slice(0, 6).map((album, i) => (
+            <button
+              class:list={[
+                'nav-thumb flex-shrink-0 w-16 h-16 overflow-hidden transition-opacity duration-200',
+                i === 0 ? 'ring-1 ring-[var(--color-accent)] opacity-100' : 'opacity-40 hover:opacity-80'
+              ]}
+              data-index={i}
+              aria-label={album.title}
+            >
+              <img src={album.cover} alt={album.title} class="w-full h-full object-cover" loading="lazy" />
+            </button>
+          ))}
+        </div>
+
+        {albumData.length > 6 && (
+          <button
+            id="load-more-btn"
+            class="text-xs text-[var(--color-muted)] hover:text-[var(--color-text)] border border-[var(--color-border)] hover:border-[var(--color-muted)] px-4 py-1.5 transition-colors"
+          >
+            Load more
+          </button>
+        )}
       </div>
-    )}
-  </section>
+
+    </section>
+  )}
 </BaseLayout>
+
+<script define:vars={{ albumData }}>
+  const PAGE_SIZE = 6;
+  let loadedCount = Math.min(PAGE_SIZE, albumData.length);
+  let activeIndex = 0;
+
+  const previewImg   = document.getElementById('preview-img');
+  const previewTitle = document.getElementById('preview-title');
+  const previewMeta  = document.getElementById('preview-meta');
+  const previewLink  = document.getElementById('preview-link');
+  const strip        = document.getElementById('nav-strip');
+  const loadMoreBtn  = document.getElementById('load-more-btn');
+
+  function selectAlbum(index) {
+    const album = albumData[index];
+    activeIndex = index;
+
+    previewImg.src        = album.cover;
+    previewImg.alt        = album.title;
+    previewTitle.textContent = album.title;
+    previewMeta.textContent  = (album.location ? `${album.location}, ` : '') + album.year;
+    previewLink.href      = album.href;
+
+    document.querySelectorAll('.nav-thumb').forEach((btn, i) => {
+      const active = Number(btn.dataset.index) === index;
+      btn.classList.toggle('ring-1', active);
+      btn.classList.toggle('ring-[var(--color-accent)]', active);
+      btn.classList.toggle('opacity-100', active);
+      btn.classList.toggle('opacity-40', !active);
+    });
+  }
+
+  function addThumb(album, index) {
+    const btn = document.createElement('button');
+    btn.className = 'nav-thumb flex-shrink-0 w-16 h-16 overflow-hidden transition-opacity duration-200 opacity-40 hover:opacity-80';
+    btn.dataset.index = String(index);
+    btn.setAttribute('aria-label', album.title);
+    const img = document.createElement('img');
+    img.src = album.cover;
+    img.alt = album.title;
+    img.className = 'w-full h-full object-cover';
+    img.loading = 'lazy';
+    btn.appendChild(img);
+    btn.addEventListener('click', () => selectAlbum(index));
+    strip.appendChild(btn);
+  }
+
+  // Bind existing thumbs
+  document.querySelectorAll('.nav-thumb').forEach(btn => {
+    btn.addEventListener('click', () => selectAlbum(Number(btn.dataset.index)));
+  });
+
+  // Load more
+  if (loadMoreBtn) {
+    loadMoreBtn.addEventListener('click', () => {
+      const next = albumData.slice(loadedCount, loadedCount + PAGE_SIZE);
+      next.forEach((album, i) => addThumb(album, loadedCount + i));
+      loadedCount += next.length;
+      if (loadedCount >= albumData.length) loadMoreBtn.style.display = 'none';
+    });
+  }
+</script>
