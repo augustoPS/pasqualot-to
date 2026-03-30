@@ -221,12 +221,21 @@
     if (gate && !alreadyUnlocked) document.body.style.overflow = 'hidden';
 
     async function fetchAndUnlock() {
-      const res = await fetch(`/api/albums/${albumId}/photos`);
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+      let res;
+      try {
+        res = await fetch(`/api/albums/${albumId}/photos`, { signal: controller.signal });
+      } catch {
+        return false;
+      } finally {
+        clearTimeout(timeout);
+      }
       if (!res.ok) return false;
       const { photos: locked } = await res.json();
       const startIndex = allPhotos.length;
       locked.forEach((p, i) => {
-        const photo = { src: p.src, thumbSrc: `${p.src}?w=300`, alt: p.alt };
+        const photo = { src: p.src, thumbSrc: p.thumbSrc, alt: p.alt };
         allPhotos.push(photo);
         addThumb(photo, startIndex + i);
       });

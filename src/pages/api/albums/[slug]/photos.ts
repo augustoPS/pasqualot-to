@@ -30,6 +30,7 @@ export const GET: APIRoute = async ({ params, cookies }) => {
     file: p.file,
     alt: p.alt,
     src: `/api/photos/${slug}/${p.file}`,
+    thumbSrc: `/api/photos/${slug}/${p.file}?w=300`,
   }));
 
   return new Response(JSON.stringify({ photos: lockedPhotos }), {
