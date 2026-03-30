@@ -56,7 +56,7 @@ function fullUrl(file: string) {
       </div>
 
       <!-- Preview image with mobile prev/next arrows -->
-      <div class="relative w-full max-w-2xl mx-auto">
+      <div class="relative w-full max-w-2xl mx-auto h-[45vh] sm:h-[60vh]">
         <button
           id="preview-prev"
           class="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-11 h-11 flex items-center justify-center text-white/60 hover:text-white bg-black/30 hover:bg-black/60 transition-colors sm:hidden"
@@ -66,7 +66,7 @@ function fullUrl(file: string) {
 
         <button
           id="preview-btn"
-          class="w-full cursor-zoom-in block"
+          class="w-full h-full cursor-zoom-in block flex items-center justify-center"
           aria-label="View photo fullscreen"
           onclick="openLightbox()"
         >
@@ -74,7 +74,7 @@ function fullUrl(file: string) {
             id="preview-img"
             src={fullUrl(previewPhotos[0].file)}
             alt={previewPhotos[0].alt}
-            class="w-full object-contain max-h-[45vh] sm:max-h-[70vh] transition-opacity duration-200"
+            class="w-full h-full object-contain transition-opacity duration-200"
           />
         </button>
 
@@ -89,7 +89,7 @@ function fullUrl(file: string) {
 
     <!-- Thumbnail strip -->
     <div class="pt-6 pb-8 flex flex-col items-center gap-3">
-      <div id="thumb-strip" class="flex gap-2 flex-nowrap overflow-x-auto w-full sm:flex-wrap sm:justify-center snap-x snap-mandatory">
+      <div id="thumb-strip" class="flex gap-2 flex-nowrap overflow-x-auto w-full snap-x snap-mandatory">
         {previewPhotos.map((photo, i) => (
           <button
             class:list={[
