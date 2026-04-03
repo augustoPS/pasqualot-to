@@ -15,8 +15,8 @@ function safeCompare(a: string, b: string): boolean {
 }
 
 function getAlbumPassword(albumId: string): string | undefined {
-  // Album passwords are stored as env vars: ALBUM_PASSWORD_<SLUG_UPPERCASE_DASHES_TO_UNDERSCORES>
-  const key = `ALBUM_PASSWORD_${albumId.toUpperCase().replace(/-/g, '_')}`;
+  // Album passwords are stored as env vars: ALBUM_PASSWORD_<SLUG_UPPERCASE_DASHES_AND_SLASHES_TO_UNDERSCORES>
+  const key = `ALBUM_PASSWORD_${albumId.toUpperCase().replace(/[-/]/g, '_')}`;
   return process.env[key];
 }
 
@@ -33,7 +33,7 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(JSON.stringify({ error: 'Missing fields' }), { status: 400 });
   }
 
-  if (!/^[a-z0-9-]+$/.test(album)) {
+  if (!/^[a-z0-9][a-z0-9/-]*$/.test(album)) {
     return new Response(JSON.stringify({ error: 'Invalid album' }), { status: 400 });
   }
 
@@ -54,7 +54,8 @@ export const POST: APIRoute = async ({ request }) => {
     .sign(jwtSecret);
 
   const secure = import.meta.env.PROD ? '; Secure' : '';
-  const cookie = `album_token_${album}=${token}; HttpOnly; Path=/; SameSite=Lax; Max-Age=86400${secure}`;
+  const cookieName = `album_token_${album.replace(/\//g, '_')}`;
+  const cookie = `${cookieName}=${token}; HttpOnly; Path=/; SameSite=Lax; Max-Age=86400${secure}`;
 
   return new Response(JSON.stringify({ ok: true }), {
     status: 200,

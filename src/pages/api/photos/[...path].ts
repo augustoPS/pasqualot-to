@@ -6,7 +6,7 @@ import { jwtVerify } from 'jose';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import sharp from 'sharp';
-import { PHOTO_JWT_SECRET as secret, R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME } from '../../../../lib/env';
+import { PHOTO_JWT_SECRET as secret, R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME } from '../../../lib/env';
 
 const s3 = new S3Client({
   region: 'auto',
@@ -18,11 +18,17 @@ const s3 = new S3Client({
 });
 
 export const GET: APIRoute = async ({ params, cookies, url }) => {
-  const { album, file } = params;
-  if (!album || !file) return new Response('Not found', { status: 404 });
+  const raw = params.path;
+  if (!raw) return new Response('Not found', { status: 404 });
 
-  // Prevent path traversal and enforce slug format
-  if (!/^[a-z0-9-]+$/.test(album) || !/^[a-zA-Z0-9._-]+$/.test(file)) {
+  // Split path: last segment is the filename, everything before is the album slug
+  const parts = raw.split('/');
+  if (parts.length < 2) return new Response('Not found', { status: 404 });
+  const file = parts[parts.length - 1];
+  const album = parts.slice(0, -1).join('/');
+
+  // Validate album slug and filename
+  if (!/^[a-z0-9][a-z0-9/-]*$/.test(album) || !/^[a-zA-Z0-9._-]+$/.test(file)) {
     return new Response('Bad request', { status: 400 });
   }
 
@@ -31,8 +37,6 @@ export const GET: APIRoute = async ({ params, cookies, url }) => {
   const width = parsed && Number.isFinite(parsed) && parsed > 0 ? Math.min(parsed, 2400) : null;
 
   // Determine protection status from the content collection — never from query params.
-  // getEntry returns undefined for unknown slugs, which we treat as not protected
-  // (the request will 404 at R2 if the key doesn't exist).
   const entry = await getEntry('albums', album);
   const isProtected = entry?.data.protected ?? false;
 
@@ -40,7 +44,6 @@ export const GET: APIRoute = async ({ params, cookies, url }) => {
   // Protected albums always proxy bytes: access is JWT-gated, not CDN-accessible.
   // Public albums without a resize request: 302 to a short-lived presigned URL.
   if (!width && !isProtected) {
-    // Public album, full-size photo — redirect to presigned R2 URL (5-min TTL).
     const cmd = new GetObjectCommand({ Bucket: R2_BUCKET_NAME, Key: `${album}/${file}` });
     try {
       const presignedUrl = await getSignedUrl(s3, cmd, { expiresIn: 300 });
@@ -57,7 +60,8 @@ export const GET: APIRoute = async ({ params, cookies, url }) => {
   }
 
   // Protected album or thumbnail request — require a valid JWT before proxying.
-  const token = cookies.get(`album_token_${album}`)?.value;
+  const cookieName = `album_token_${album.replace(/\//g, '_')}`;
+  const token = cookies.get(cookieName)?.value;
   if (!token) return new Response('Unauthorized', { status: 401 });
 
   try {

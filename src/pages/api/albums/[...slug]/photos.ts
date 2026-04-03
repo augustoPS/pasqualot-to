@@ -7,11 +7,12 @@ import { PHOTO_JWT_SECRET as secret } from '../../../../lib/env';
 
 export const GET: APIRoute = async ({ params, cookies }) => {
   const { slug } = params;
-  if (!slug || !/^[a-z0-9-]+$/.test(slug)) {
+  if (!slug || !/^[a-z0-9][a-z0-9/-]*$/.test(slug)) {
     return new Response('Bad request', { status: 400 });
   }
 
-  const token = cookies.get(`album_token_${slug}`)?.value;
+  const cookieName = `album_token_${slug.replace(/\//g, '_')}`;
+  const token = cookies.get(cookieName)?.value;
   if (!token) return new Response('Unauthorized', { status: 401 });
 
   try {
