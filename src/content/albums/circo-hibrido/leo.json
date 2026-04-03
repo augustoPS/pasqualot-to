@@ -2,9 +2,7 @@
   "title": "Leo",
   "date": "2026-04-03",
   "cover": "IMG_4736.jpg",
-  "protected": true,
-  "previewCount": 2,
-  "photos": [
+"photos": [
     { "file": "IMG_4736.jpg", "alt": "Leo" },
     { "file": "IMG_4712.jpg", "alt": "Leo" },
     { "file": "IMG_4570.jpg", "alt": "Leo" },

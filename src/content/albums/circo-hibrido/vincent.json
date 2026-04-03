@@ -2,9 +2,7 @@
   "title": "Vincent",
   "date": "2026-04-03",
   "cover": "IMG_5218.jpg",
-  "protected": true,
-  "previewCount": 1,
-  "photos": [
+"photos": [
     { "file": "IMG_5218.jpg", "alt": "Vincent" },
     { "file": "IMG_4911.jpg", "alt": "Vincent" },
     { "file": "IMG_4917.jpg", "alt": "Vincent" },

@@ -2,9 +2,7 @@
   "title": "Thiago",
   "date": "2026-04-03",
   "cover": "IMG_4461.jpg",
-  "protected": true,
-  "previewCount": 1,
-  "photos": [
+"photos": [
     { "file": "IMG_4461.jpg", "alt": "Thiago" },
     { "file": "IMG_4085.jpg", "alt": "Thiago" },
     { "file": "IMG_4091.jpg", "alt": "Thiago" },
