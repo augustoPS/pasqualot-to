@@ -1,0 +1,68 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import Breadcrumbs from './Breadcrumbs.astro';
+
+interface AlbumGroup {
+  album: CollectionEntry<'albums'>;
+  photos: { file: string; alt: string; src: string; thumbSrc: string }[];
+}
+
+interface Props {
+  collection: CollectionEntry<'albumCollections'>;
+  groups: AlbumGroup[];
+  breadcrumbs: { label: string; href: string }[];
+}
+
+const { collection, groups, breadcrumbs } = Astro.props;
+const { title, date, location, description } = collection.data;
+const year = new Date(date).getFullYear();
+const totalPhotos = groups.reduce((n, g) => n + g.photos.length, 0);
+---
+
+<div class="max-w-5xl mx-auto px-6 py-8">
+  <Breadcrumbs crumbs={breadcrumbs} />
+  <h1 class="text-2xl font-medium text-[var(--color-accent)]">{title} — All</h1>
+  <p class="text-sm text-[var(--color-muted)] mt-1">
+    {location ? `${location}, ` : ''}{year}
+    {totalPhotos > 0 && ` · ${totalPhotos} photo${totalPhotos !== 1 ? 's' : ''}`}
+  </p>
+  {description && (
+    <p class="text-sm text-[var(--color-text)] mt-2 max-w-xl">{description}</p>
+  )}
+
+  {groups.length === 0 ? (
+    <p class="text-[var(--color-muted)] text-sm mt-8">No photos.</p>
+  ) : (
+    <div class="mt-8 flex flex-col gap-10">
+      {groups.map((group) => (
+        <section>
+          <div class="flex items-baseline gap-3 mb-3 border-b border-[var(--color-border)] pb-2">
+            <a
+              href={`/gallery/${group.album.id}`}
+              class="text-sm font-medium text-[var(--color-text)] hover:text-[var(--color-accent)] transition-colors"
+            >
+              {group.album.data.title}
+            </a>
+            <span class="text-xs text-[var(--color-muted)]">{group.photos.length} photos</span>
+          </div>
+          <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1.5">
+            {group.photos.map((photo) => (
+              <a
+                href={`/gallery/${group.album.id}`}
+                class="block aspect-square overflow-hidden bg-[var(--color-surface)]"
+                aria-label={photo.alt}
+              >
+                <img
+                  src={photo.thumbSrc}
+                  alt={photo.alt}
+                  class="w-full h-full object-cover transition-opacity duration-150 opacity-80 hover:opacity-100"
+                  loading="lazy"
+                />
+              </a>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  )}
+</div>

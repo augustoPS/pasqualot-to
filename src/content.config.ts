@@ -49,4 +49,16 @@ const projects = defineCollection({
   }),
 });
 
-export const collections = { albums, blog, notes, projects };
+const albumCollections = defineCollection({
+  loader: glob({ pattern: '**/*.json', base: './src/content/collections' }),
+  schema: z.object({
+    title: z.string(),
+    date: z.string(),
+    location: z.string().optional(),
+    description: z.string().optional(),
+    cover: z.string(),
+    children: z.array(z.string()),
+  }),
+});
+
+export const collections = { albums, blog, notes, projects, albumCollections };

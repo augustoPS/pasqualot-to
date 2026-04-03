@@ -17,7 +17,7 @@ Node.js PATH may need: `export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"`
 - **Astro 6** with `@astrojs/vercel` adapter — static output with serverless API routes
 - **Tailwind CSS v4** (configured via `@theme` in `src/styles/global.css`, no tailwind.config.js)
 - **Content Layer API** (Astro 5+ glob loaders, not legacy `type: 'content'`)
-- **Cloudflare R2** for protected photo storage (S3-compatible, accessed via `@aws-sdk/client-s3`)
+- **Cloudflare R2** for all photo storage — two buckets (public CDN + private proxy)
 - **JWT auth** via `jose` — HTTP-only cookies for protected album access
 
 ## Architecture
@@ -29,20 +29,40 @@ All collections use the Astro 6 Content Layer glob loader:
 | Collection | Format | Location |
 |---|---|---|
 | `albums` | JSON | `src/content/albums/*.json` |
+| `albumCollections` | JSON | `src/content/collections/*.json` |
 | `blog` | Markdown | `src/content/blog/*.md` |
 | `notes` | Markdown | `src/content/notes/*.md` |
 | `projects` | JSON | `src/content/projects/*.json` |
 
-Album slugs come from the JSON filename (e.g. `tokyo-2024.json` → `/gallery/tokyo-2024`).
+Album slugs come from the JSON filename (e.g. `tokyo-2024.json` → `/gallery/tokyo-2024`). Collections are containers: their `children` array holds album or collection IDs, enabling nested hierarchies. The gallery index shows only top-level nodes (not referenced as any collection's child).
 
 ### Photos
 
-Two tiers depending on whether the album is protected:
+Two R2 buckets with a hard security boundary:
 
-- **Public photos** — live in `public/photos/[album-slug]/`, served directly from CDN. Used for preview photos and unprotected albums.
-- **Protected photos** — stored in Cloudflare R2 bucket under `[album-slug]/[filename]`. Served via `/api/photos/[album]/[...file]` which validates a JWT cookie before proxying from R2.
+| Bucket | CDN | Contains | Served via |
+|---|---|---|---|
+| `pasqualottoweb-public` | `photos.pasqualo.to` | Public album photos, preview photos, all thumbs | Cloudflare CDN — zero Vercel bandwidth |
+| `pasqualottoweb` | none | Locked photos (protected albums, non-preview) | `/api/photos/` Vercel proxy — JWT-gated |
+
+The separation means locked photos are unreachable via CDN by construction — not just by convention. Knowing a filename is not enough to access a locked photo.
+
+**Public bucket layout:**
+```
+[album-slug]/[filename]          ← full-size photos (public albums + previews)
+[album-slug]/thumbs/[filename]   ← pre-generated thumbnails (400px wide, JPEG)
+```
+
+**Private bucket layout:**
+```
+[album-slug]/[filename]          ← locked photos only
+```
+
+Thumbnails for locked photos are generated on-demand by `sharp` in the Vercel proxy (`?w=300`) — not pre-stored.
 
 To mark an album as protected, set `"protected": true` in the album JSON. The album password is stored as a Vercel env var: `ALBUM_PASSWORD_<SLUG_UPPERCASE>` (e.g. `ALBUM_PASSWORD_PB_SALVADOR`). Never store passwords in source.
+
+The CDN base URL is `PHOTOS_CDN` in `src/config.ts`. All photo URL construction goes through `src/lib/photos.ts` — do not hardcode paths in components.
 
 ### API Routes (`src/pages/api/`)
 
@@ -51,7 +71,12 @@ All API routes use `export const prerender = false` for serverless execution.
 | Route | Method | Purpose |
 |---|---|---|
 | `/api/auth/album` | POST | Verify album password → issue JWT cookie |
-| `/api/photos/[album]/[...file]` | GET | Validate JWT → proxy photo from R2 |
+| `/api/photos/[album]/[...file]` | GET | Validate JWT → proxy photo from R2 (add `?w=N` for resized thumb) |
+| `/api/albums/[slug]/photos` | GET | Validate JWT → return JSON list of locked photo URLs |
+
+### Middleware (`src/middleware.ts`)
+
+Rate-limits `POST /api/auth/album` — 5 requests per 60s per IP — using Upstash Redis. The limiter is only instantiated when both Upstash env vars are present; omitting them disables rate limiting silently (safe for local dev).
 
 ### Required Environment Variables
 
@@ -61,8 +86,17 @@ All API routes use `export const prerender = false` for serverless execution.
 | `R2_ACCOUNT_ID` | Cloudflare account ID |
 | `R2_ACCESS_KEY_ID` | R2 access key |
 | `R2_SECRET_ACCESS_KEY` | R2 secret key |
-| `R2_BUCKET_NAME` | R2 bucket name (e.g. `pasqualottoweb`) |
+| `R2_BUCKET_NAME` | Private R2 bucket name — locked photos only (e.g. `pasqualottoweb`) |
 | `ALBUM_PASSWORD_<SLUG>` | Per-album password (e.g. `ALBUM_PASSWORD_PB_SALVADOR`) |
+
+**Optional:**
+
+| Variable | Description |
+|---|---|
+| `UPSTASH_REDIS_REST_URL` | Upstash Redis URL — enables auth rate limiting |
+| `UPSTASH_REDIS_REST_TOKEN` | Upstash Redis token |
+
+The public bucket (`pasqualottoweb-public`) requires no env vars — it is served entirely via the Cloudflare CDN custom domain and never accessed by server code.
 
 ### Site Config (`src/config.ts`)
 
@@ -74,9 +108,32 @@ All API routes use `export const prerender = false` for serverless execution.
 
 ## Adding Content
 
-**New public album:** create `src/content/albums/[slug].json` and add photos to `public/photos/[slug]/`.
+**One-time Cloudflare setup:**
+1. Create a second R2 bucket: `pasqualottoweb-public`
+2. `pasqualottoweb-public` → Settings → Custom Domains → add `photos.pasqualo.to`
+3. Keep `pasqualottoweb` as-is (no custom domain, no public access)
 
-**New protected album:** create `src/content/albums/[slug].json` with `"protected": true`, upload photos to R2 under `[slug]/`, and set `ALBUM_PASSWORD_<SLUG>` in Vercel env vars.
+**New public album:**
+1. Create `src/content/albums/[slug].json`
+2. Compress and generate thumbs: `node scripts/compress-photos.mjs <raw-dir> <out-dir> --thumbs`
+3. Upload `<out-dir>/*.jpg` → **public bucket** `[slug]/`
+4. Upload `<out-dir>/thumbs/*.jpg` → **public bucket** `[slug]/thumbs/`
+
+**New protected album:**
+1. Create `src/content/albums/[slug].json` with `"protected": true` and `"previewCount": N`
+   - `previewCount` means the **first N entries** in the `photos[]` array are public previews; all others are locked
+2. Compress all photos: `node scripts/compress-photos.mjs <raw-dir> <out-dir> --thumbs`
+3. Upload the N preview photos + thumbs → **public bucket** `[slug]/` and `[slug]/thumbs/`
+4. Upload all remaining (locked) photos → **private bucket** `[slug]/`
+5. Set `ALBUM_PASSWORD_<SLUG_UPPERCASE>` in Vercel env vars
+
+**New collection:** create `src/content/collections/[slug].json` with a `children` array of album/collection IDs. Upload the collection's cover image → **public bucket** `[slug]/cover.jpg`.
+
+**Migration (existing photos in `public/photos/`):**
+1. Upload `public/photos/pb-inca/` preview photos + `thumbs/` → **public bucket** `pb-inca/`
+2. Upload `public/photos/pb-salvador/` preview photos + `thumbs/` → **public bucket** `pb-salvador/`
+3. Verify CDN delivery at `https://photos.pasqualo.to/pb-inca/IMG_4552.jpg`
+4. Remove `public/photos/` from the repo
 
 **Enable blog:** set `SHOW_BLOG = true` in `src/config.ts` once you have posts in `src/content/blog/`.
 

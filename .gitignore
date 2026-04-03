@@ -38,3 +38,5 @@ id_*
 # agents runtime data
 agents/memories/
 agents/.env
+.vercel
+.env*.local

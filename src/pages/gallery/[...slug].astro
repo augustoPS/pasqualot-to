@@ -1,0 +1,181 @@
+---
+import { getCollection } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AlbumPage from '../../components/gallery/AlbumPage.astro';
+import CollectionPage from '../../components/gallery/CollectionPage.astro';
+import AllPage from '../../components/gallery/AllPage.astro';
+import { cdnUrl, cdnThumbUrl } from '../../lib/photos';
+
+export async function getStaticPaths() {
+  const allAlbums = await getCollection('albums');
+  const allCollections = await getCollection('albumCollections');
+
+  const paths: {
+    params: { slug: string };
+    props: {
+      type: 'album' | 'collection' | 'all';
+      album: CollectionEntry<'albums'> | null;
+      collection: CollectionEntry<'albumCollections'> | null;
+      allAlbums: CollectionEntry<'albums'>[];
+      allCollections: CollectionEntry<'albumCollections'>[];
+    };
+  }[] = [];
+
+  for (const album of allAlbums) {
+    paths.push({
+      params: { slug: album.id },
+      props: { type: 'album', album, collection: null, allAlbums, allCollections },
+    });
+  }
+
+  for (const col of allCollections) {
+    paths.push({
+      params: { slug: col.id },
+      props: { type: 'collection', album: null, collection: col, allAlbums, allCollections },
+    });
+
+    const publicAlbumChildCount = col.data.children.filter((id) => {
+      const a = allAlbums.find((a) => a.id === id);
+      return a != null && !a.data.protected;
+    }).length;
+
+    if (publicAlbumChildCount > 0) {
+      paths.push({
+        params: { slug: `${col.id}/all` },
+        props: { type: 'all', album: null, collection: col, allAlbums, allCollections },
+      });
+    }
+  }
+
+  return paths;
+}
+
+const { type, album, collection, allAlbums, allCollections } = Astro.props;
+const slug = Astro.params.slug!;
+
+// Build title lookup from all nodes
+const titleMap = new Map<string, string>();
+for (const a of allAlbums) titleMap.set(a.id, a.data.title);
+for (const c of allCollections) titleMap.set(c.id, c.data.title);
+
+// Build breadcrumbs from slug segments
+const isAll = slug.endsWith('/all');
+const nodePath = isAll ? slug.slice(0, -4) : slug;
+const parts = nodePath.split('/');
+
+const breadcrumbs: { label: string; href: string }[] = [{ label: 'Gallery', href: '/' }];
+for (let i = 0; i < parts.length - 1; i++) {
+  const id = parts.slice(0, i + 1).join('/');
+  breadcrumbs.push({ label: titleMap.get(id) ?? id, href: `/gallery/${id}` });
+}
+const nodeTitle = titleMap.get(nodePath) ?? parts[parts.length - 1];
+if (isAll) {
+  breadcrumbs.push({ label: nodeTitle, href: `/gallery/${nodePath}` });
+  breadcrumbs.push({ label: 'All', href: `/gallery/${slug}` });
+} else {
+  breadcrumbs.push({ label: nodeTitle, href: `/gallery/${slug}` });
+}
+
+// Page meta
+let pageTitle = nodeTitle;
+let pageDescription: string | undefined;
+let ogImage: string | undefined;
+
+if (type === 'album' && album) {
+  pageTitle = album.data.title;
+  pageDescription = album.data.description;
+  ogImage = cdnUrl(album.id, album.data.cover);
+} else if ((type === 'collection' || type === 'all') && collection) {
+  pageTitle = type === 'all' ? `${collection.data.title} — All` : collection.data.title;
+  pageDescription = collection.data.description;
+  ogImage = cdnUrl(collection.id, collection.data.cover);
+}
+
+// Resolve CollectionPage children
+let collectionChildren: {
+  id: string; title: string; href: string; coverSrc: string;
+  meta: string; protected: boolean; isCollection: boolean;
+}[] = [];
+let hasAll = false;
+
+if (type === 'collection' && collection) {
+  for (const childId of collection.data.children) {
+    const childAlbum = allAlbums.find((a) => a.id === childId);
+    if (childAlbum) {
+      const year = new Date(childAlbum.data.date).getFullYear();
+      collectionChildren.push({
+        id: childAlbum.id,
+        title: childAlbum.data.title,
+        href: `/gallery/${childAlbum.id}`,
+        coverSrc: cdnUrl(childAlbum.id, childAlbum.data.cover),
+        meta: childAlbum.data.location
+          ? `${childAlbum.data.location} · ${year}`
+          : String(year),
+        protected: childAlbum.data.protected,
+        isCollection: false,
+      });
+      if (!childAlbum.data.protected) hasAll = true;
+      continue;
+    }
+    const childCol = allCollections.find((c) => c.id === childId);
+    if (childCol) {
+      const year = new Date(childCol.data.date).getFullYear();
+      collectionChildren.push({
+        id: childCol.id,
+        title: childCol.data.title,
+        href: `/gallery/${childCol.id}`,
+        coverSrc: cdnUrl(childCol.id, childCol.data.cover),
+        meta: childCol.data.location
+          ? `${childCol.data.location} · ${year}`
+          : String(year),
+        protected: false,
+        isCollection: true,
+      });
+    }
+  }
+}
+
+// Resolve AllPage groups
+let allGroups: {
+  album: CollectionEntry<'albums'>;
+  photos: { file: string; alt: string; src: string; thumbSrc: string }[];
+}[] = [];
+
+if (type === 'all' && collection) {
+  for (const childId of collection.data.children) {
+    const childAlbum = allAlbums.find((a) => a.id === childId);
+    if (!childAlbum || childAlbum.data.protected) continue;
+    allGroups.push({
+      album: childAlbum,
+      photos: childAlbum.data.photos.map((p) => ({
+        file: p.file,
+        alt: p.alt,
+        src: cdnUrl(childAlbum.id, p.file),
+        thumbSrc: cdnThumbUrl(childAlbum.id, p.file),
+      })),
+    });
+  }
+}
+---
+
+<BaseLayout title={pageTitle} description={pageDescription} ogImage={ogImage}>
+  {type === 'album' && album && (
+    <AlbumPage album={album} breadcrumbs={breadcrumbs} />
+  )}
+  {type === 'collection' && collection && (
+    <CollectionPage
+      collection={collection}
+      children={collectionChildren}
+      breadcrumbs={breadcrumbs}
+      hasAll={hasAll}
+    />
+  )}
+  {type === 'all' && collection && (
+    <AllPage
+      collection={collection}
+      groups={allGroups}
+      breadcrumbs={breadcrumbs}
+    />
+  )}
+</BaseLayout>

@@ -34,19 +34,19 @@ export const GET: APIRoute = async ({ params, cookies, url }) => {
     return new Response('Invalid token', { status: 401 });
   }
 
+  const w = url.searchParams.get('w');
+  const parsed = w ? parseInt(w, 10) : null;
+  const width = parsed && Number.isFinite(parsed) && parsed > 0 ? Math.min(parsed, 2400) : null;
+
   try {
-    const cmd = new GetObjectCommand({
-      Bucket: R2_BUCKET_NAME,
-      Key: `${album}/${file}`,
-    });
+    const cmd = new GetObjectCommand({ Bucket: R2_BUCKET_NAME, Key: `${album}/${file}` });
     const res = await s3.send(cmd);
     let body = await res.Body?.transformToByteArray();
     if (!body) return new Response('Not found', { status: 404 });
 
-    const w = url.searchParams.get('w');
-    const parsed = w ? parseInt(w, 10) : null;
-    const width = parsed && Number.isFinite(parsed) && parsed > 0 ? Math.min(parsed, 2400) : null;
     let contentType = res.ContentType ?? 'image/jpeg';
+
+    // Thumbnail (?w=N): resize via sharp before serving
     if (width) {
       body = await sharp(body).resize({ width, withoutEnlargement: true }).jpeg({ quality: 80 }).toBuffer();
       contentType = 'image/jpeg';

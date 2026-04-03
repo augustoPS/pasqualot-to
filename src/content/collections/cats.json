@@ -1,0 +1,6 @@
+{
+  "title": "Cats",
+  "date": "2026-04-02",
+  "cover": "cover.jpg",
+  "children": ["cats/amarula"]
+}
