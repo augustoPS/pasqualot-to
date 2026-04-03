@@ -184,6 +184,8 @@
   }
 
   document.getElementById('preview-btn').addEventListener('click', openLightbox);
+  document.getElementById('preview-prev').addEventListener('click', () => window.previewNavigate(-1));
+  document.getElementById('preview-next').addEventListener('click', () => window.previewNavigate(1));
   document.getElementById('lightbox-close').addEventListener('click', closeLightbox);
   document.getElementById('lightbox-prev').addEventListener('click', lightboxPrev);
   document.getElementById('lightbox-next').addEventListener('click', lightboxNext);
