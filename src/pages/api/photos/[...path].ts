@@ -1,10 +1,8 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import { getEntry } from 'astro:content';
 import { jwtVerify } from 'jose';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import sharp from 'sharp';
 import { PHOTO_JWT_SECRET as secret, R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME } from '../../../lib/env';
 
@@ -36,30 +34,8 @@ export const GET: APIRoute = async ({ params, cookies, url }) => {
   const parsed = w ? parseInt(w, 10) : null;
   const width = parsed && Number.isFinite(parsed) && parsed > 0 ? Math.min(parsed, 2400) : null;
 
-  // Determine protection status from the content collection — never from query params.
-  const entry = await getEntry('albums', album);
-  const isProtected = entry?.data.protected ?? false;
-
-  // Thumbnails (?w=N) always go through the proxy: on-demand sharp resize can't be presigned.
-  // Protected albums always proxy bytes: access is JWT-gated, not CDN-accessible.
-  // Public albums without a resize request: 302 to a short-lived presigned URL.
-  if (!width && !isProtected) {
-    const cmd = new GetObjectCommand({ Bucket: R2_BUCKET_NAME, Key: `${album}/${file}` });
-    try {
-      const presignedUrl = await getSignedUrl(s3, cmd, { expiresIn: 300 });
-      return new Response(null, {
-        status: 302,
-        headers: {
-          Location: presignedUrl,
-          'Cache-Control': 'no-store',
-        },
-      });
-    } catch {
-      return new Response('Not found', { status: 404 });
-    }
-  }
-
-  // Protected album or thumbnail request — require a valid JWT before proxying.
+  // This route only serves protected album photos (locked, JWT-gated).
+  // Public photos are served directly via CDN (photos.pasqualo.to) and never hit this route.
   const cookieName = `album_token_${album.replace(/\//g, '_')}`;
   const token = cookies.get(cookieName)?.value;
   if (!token) return new Response('Unauthorized', { status: 401 });
