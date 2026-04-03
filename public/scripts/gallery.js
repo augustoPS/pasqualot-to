@@ -183,6 +183,7 @@
     selectPhoto(activeIndex);
   }
 
+  document.getElementById('preview-btn').addEventListener('click', openLightbox);
   document.getElementById('lightbox-close').addEventListener('click', closeLightbox);
   document.getElementById('lightbox-prev').addEventListener('click', lightboxPrev);
   document.getElementById('lightbox-next').addEventListener('click', lightboxNext);
