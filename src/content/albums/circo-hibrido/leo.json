@@ -1,0 +1,32 @@
+{
+  "title": "Leo",
+  "date": "2026-04-03",
+  "cover": "IMG_4736.jpg",
+  "protected": true,
+  "previewCount": 2,
+  "photos": [
+    { "file": "IMG_4736.jpg", "alt": "Leo" },
+    { "file": "IMG_4712.jpg", "alt": "Leo" },
+    { "file": "IMG_4570.jpg", "alt": "Leo" },
+    { "file": "IMG_4574.jpg", "alt": "Leo" },
+    { "file": "IMG_4587.jpg", "alt": "Leo" },
+    { "file": "IMG_4603.jpg", "alt": "Leo" },
+    { "file": "IMG_4631.jpg", "alt": "Leo" },
+    { "file": "IMG_4673.jpg", "alt": "Leo" },
+    { "file": "IMG_4688.jpg", "alt": "Leo" },
+    { "file": "IMG_4705.jpg", "alt": "Leo" },
+    { "file": "IMG_4721.jpg", "alt": "Leo" },
+    { "file": "IMG_4722.jpg", "alt": "Leo" },
+    { "file": "IMG_4726.jpg", "alt": "Leo" },
+    { "file": "IMG_4744.jpg", "alt": "Leo" },
+    { "file": "IMG_4749.jpg", "alt": "Leo" },
+    { "file": "IMG_4752.jpg", "alt": "Leo" },
+    { "file": "IMG_4762.jpg", "alt": "Leo" },
+    { "file": "IMG_4817.jpg", "alt": "Leo" },
+    { "file": "IMG_4836.jpg", "alt": "Leo" },
+    { "file": "IMG_4846.jpg", "alt": "Leo" },
+    { "file": "IMG_4853.jpg", "alt": "Leo" },
+    { "file": "IMG_4857.jpg", "alt": "Leo" },
+    { "file": "IMG_4897.jpg", "alt": "Leo" }
+  ]
+}

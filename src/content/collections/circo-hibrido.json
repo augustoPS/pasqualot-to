@@ -1,0 +1,6 @@
+{
+  "title": "Circo Híbrido",
+  "date": "2026-04-03",
+  "cover": "cover.jpg",
+  "children": ["circo-hibrido/leo", "circo-hibrido/thiago", "circo-hibrido/vincent"]
+}
