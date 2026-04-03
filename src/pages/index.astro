@@ -12,8 +12,8 @@ const childIds = new Set(allCollections.flatMap((c) => c.data.children));
 // Top-level albums: not referenced as a child of any collection
 const topAlbums = allAlbums.filter((a) => !childIds.has(a.id));
 
-// Top-level collections: not referenced as a child of any collection
-const topCollections = allCollections.filter((c) => !childIds.has(c.id));
+// Top-level collections: not referenced as a child of any collection, not hidden
+const topCollections = allCollections.filter((c) => !childIds.has(c.id) && !c.data.hidden);
 
 // Merge and sort by date descending
 const nodes: { id: string; title: string; href: string; coverSrc: string; meta: string; protected: boolean; isCollection: boolean; date: Date }[] = [

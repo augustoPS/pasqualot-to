@@ -29,7 +29,7 @@ export async function getStaticPaths() {
     });
   }
 
-  for (const col of allCollections) {
+  for (const col of allCollections.filter(c => !c.data.hidden)) {
     paths.push({
       params: { slug: col.id },
       props: { type: 'collection', album: null, collection: col, allAlbums, allCollections },

@@ -57,6 +57,7 @@ const albumCollections = defineCollection({
     location: z.string().optional(),
     description: z.string().optional(),
     cover: z.string(),
+    hidden: z.boolean().default(false),
     children: z.array(z.string()),
   }),
 });
