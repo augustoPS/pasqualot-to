@@ -230,11 +230,12 @@
       try {
         res = await fetch(`/api/albums/${albumId}/photos`, { signal: controller.signal });
       } catch {
-        return false;
+        return 'network';
       } finally {
         clearTimeout(timeout);
       }
-      if (!res.ok) return false;
+      if (res.status === 401 || res.status === 403) return 'expired';
+      if (!res.ok) return 'error';
       const { photos: locked } = await res.json();
       const startIndex = allPhotos.length;
       locked.forEach((p, i) => {
@@ -261,10 +262,13 @@
     }
 
     async function unlock(fromSessionStorage = false) {
-      const ok = await fetchAndUnlock();
-      if (!ok) {
+      const result = await fetchAndUnlock();
+      if (result !== true) {
         if (fromSessionStorage) sessionStorage.removeItem(storageKey);
-        showGateError('Something went wrong. Please try again.');
+        const msg = result === 'expired'
+          ? 'Your session has expired. Please enter the password again.'
+          : 'Something went wrong. Please try again.';
+        showGateError(msg);
         return;
       }
       document.body.style.overflow = '';
