@@ -11,7 +11,7 @@ export const GET: APIRoute = async ({ params, cookies }) => {
     return new Response('Bad request', { status: 400 });
   }
 
-  const cookieName = `album_token_${slug.replace(/\//g, '_')}`;
+  const cookieName = `__Host-album_token_${slug.replace(/\//g, '_')}`;
   const token = cookies.get(cookieName)?.value;
   if (!token) return new Response('Unauthorized', { status: 401 });
 

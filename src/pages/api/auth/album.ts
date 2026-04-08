@@ -50,12 +50,12 @@ export const POST: APIRoute = async ({ request }) => {
 
   const token = await new SignJWT({ album })
     .setProtectedHeader({ alg: 'HS256' })
-    .setExpirationTime('24h')
+    .setExpirationTime('8h')
     .sign(jwtSecret);
 
   const secure = import.meta.env.PROD ? '; Secure' : '';
-  const cookieName = `album_token_${album.replace(/\//g, '_')}`;
-  const cookie = `${cookieName}=${token}; HttpOnly; Path=/; SameSite=Lax; Max-Age=86400${secure}`;
+  const cookieName = `__Host-album_token_${album.replace(/\//g, '_')}`;
+  const cookie = `${cookieName}=${token}; HttpOnly; Path=/; SameSite=Lax; Max-Age=28800${secure}`;
 
   return new Response(JSON.stringify({ ok: true }), {
     status: 200,

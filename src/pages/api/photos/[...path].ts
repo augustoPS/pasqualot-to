@@ -36,7 +36,7 @@ export const GET: APIRoute = async ({ params, cookies, url }) => {
 
   // This route only serves protected album photos (locked, JWT-gated).
   // Public photos are served directly via CDN (photos.pasqualo.to) and never hit this route.
-  const cookieName = `album_token_${album.replace(/\//g, '_')}`;
+  const cookieName = `__Host-album_token_${album.replace(/\//g, '_')}`;
   const token = cookies.get(cookieName)?.value;
   if (!token) return new Response('Unauthorized', { status: 401 });
 
