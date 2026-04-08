@@ -5,6 +5,7 @@ import { jwtVerify } from 'jose';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import sharp from 'sharp';
 import { PHOTO_JWT_SECRET as secret, R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME } from '../../../lib/env';
+import { ALBUM_SLUG_REGEX, FILENAME_REGEX, parseWidth } from '../../../lib/validate';
 
 const s3 = new S3Client({
   region: 'auto',
@@ -26,13 +27,11 @@ export const GET: APIRoute = async ({ params, cookies, url }) => {
   const album = parts.slice(0, -1).join('/');
 
   // Validate album slug and filename
-  if (!/^[a-z0-9][a-z0-9/-]*$/.test(album) || !/^[a-zA-Z0-9._-]+$/.test(file)) {
+  if (!ALBUM_SLUG_REGEX.test(album) || !FILENAME_REGEX.test(file)) {
     return new Response('Bad request', { status: 400 });
   }
 
-  const w = url.searchParams.get('w');
-  const parsed = w ? parseInt(w, 10) : null;
-  const width = parsed && Number.isFinite(parsed) && parsed > 0 ? Math.min(parsed, 2400) : null;
+  const width = parseWidth(url.searchParams.get('w'));
 
   // This route only serves protected album photos (locked, JWT-gated).
   // Public photos are served directly via CDN (photos.pasqualo.to) and never hit this route.

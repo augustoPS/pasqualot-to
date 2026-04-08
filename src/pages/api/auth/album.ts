@@ -2,23 +2,8 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { SignJWT } from 'jose';
-import { timingSafeEqual, createHmac } from 'node:crypto';
 import { PHOTO_JWT_SECRET as jwtSecret } from '../../../lib/env';
-
-function safeCompare(a: string, b: string): boolean {
-  // HMAC-normalize both inputs to equal-length digests before comparing,
-  // so the comparison is constant-time regardless of input length differences.
-  const key = process.env.PHOTO_JWT_SECRET!;
-  const hmacA = createHmac('sha256', key).update(a).digest();
-  const hmacB = createHmac('sha256', key).update(b).digest();
-  return timingSafeEqual(hmacA, hmacB);
-}
-
-function getAlbumPassword(albumId: string): string | undefined {
-  // Album passwords are stored as env vars: ALBUM_PASSWORD_<SLUG_UPPERCASE_DASHES_AND_SLASHES_TO_UNDERSCORES>
-  const key = `ALBUM_PASSWORD_${albumId.toUpperCase().replace(/[-/]/g, '_')}`;
-  return process.env[key];
-}
+import { safeCompare, getAlbumPassword, ALBUM_SLUG_REGEX } from '../../../lib/auth';
 
 export const POST: APIRoute = async ({ request }) => {
   let body: { album?: string; password?: string };
@@ -33,7 +18,7 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(JSON.stringify({ error: 'Missing fields' }), { status: 400 });
   }
 
-  if (!/^[a-z0-9][a-z0-9/-]*$/.test(album)) {
+  if (!ALBUM_SLUG_REGEX.test(album)) {
     return new Response(JSON.stringify({ error: 'Invalid album' }), { status: 400 });
   }
 
