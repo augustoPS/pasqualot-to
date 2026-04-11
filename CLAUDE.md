@@ -146,3 +146,22 @@ CSS custom properties defined in `src/styles/global.css` under `@theme`:
 - `--color-text` `#e5e5e5` — body text
 - `--color-muted` `#666` — secondary/meta text
 - `--color-accent` `#fff` — headings, active nav, logo
+
+## Agent Findings
+
+Insights from the multi-agent team review (March–April 2026). These represent the team's accumulated knowledge — treat them as informed context, not immutable rules.
+
+### Security
+- The R2 dual-bucket separation (public CDN vs. private Vercel-proxied) is **load-bearing security** — not a deployment optimization. Public bucket has no auth by construction; private bucket is inaccessible without a valid JWT going through the Vercel proxy. Never collapse these into a single bucket or add public access to the private bucket.
+- JWT in HTTP-only cookies replaced the old client-side sessionStorage gate. Never reintroduce client-side auth state.
+- Knowing a private photo's filename is not enough to access it — the private bucket has no public domain.
+
+### Testing
+- Zero automated tests exist. Any new feature should define manual acceptance criteria before implementation begins. Verification steps should be documented in PRs.
+- High-priority failure modes to test manually: wrong album password, expired JWT, missing env vars (`ALBUM_PASSWORD_*`, `PHOTO_JWT_SECRET`), R2 bucket unreachable.
+
+### Accessibility
+- ARIA attributes are incomplete on interactive elements (flagged March 2026, not yet addressed). Treat as ongoing debt — flag the a11y state on any UI work, even if not fixing it immediately.
+
+### Image pipeline
+- `scripts/compress-photos.mjs` and `scripts/gen-thumbs.mjs` are manual steps that run **outside the build**. They must be run before uploading photos to R2. This step has been forgotten before — the "Adding Content" workflow above is the authoritative checklist; follow it exactly.
