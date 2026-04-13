@@ -159,15 +159,14 @@ if (type === 'all' && collection) {
 }
 ---
 
-<BaseLayout title={pageTitle} description={pageDescription} ogImage={ogImage}>
+<BaseLayout title={pageTitle} description={pageDescription} ogImage={ogImage} breadcrumbs={breadcrumbs}>
   {type === 'album' && album && (
-    <AlbumPage album={album} breadcrumbs={breadcrumbs} />
+    <AlbumPage album={album} />
   )}
   {type === 'collection' && collection && (
     <CollectionPage
       collection={collection}
       children={collectionChildren}
-      breadcrumbs={breadcrumbs}
       hasAll={hasAll}
     />
   )}
@@ -175,7 +174,6 @@ if (type === 'all' && collection) {
     <AllPage
       collection={collection}
       groups={allGroups}
-      breadcrumbs={breadcrumbs}
     />
   )}
 </BaseLayout>
