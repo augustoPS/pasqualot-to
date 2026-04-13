@@ -1,24 +1,20 @@
 ---
 import type { CollectionEntry } from 'astro:content';
-import Breadcrumbs from './Breadcrumbs.astro';
 import { cdnUrl, cdnThumbUrl, apiUrl, apiThumbUrl } from '../../lib/photos';
 
 interface Props {
   album: CollectionEntry<'albums'>;
-  breadcrumbs: { label: string; href: string }[];
 }
 
-const { album, breadcrumbs } = Astro.props;
+const { album } = Astro.props;
 const { title, date, location, description, photos, previewCount } = album.data;
 const isProtected = album.data.protected;
 const year = new Date(date).getFullYear();
 
 const previewPhotos = isProtected ? photos.slice(0, previewCount) : photos;
 const lockedCount = isProtected ? Math.max(0, photos.length - previewCount) : 0;
-
 const previewFiles = new Set(previewPhotos.map(p => p.file));
 
-// Public photos and preview photos → CDN. Locked photos → Vercel API proxy.
 function thumbUrl(file: string) {
   if (!isProtected || previewFiles.has(file)) return cdnThumbUrl(album.id, file);
   return apiThumbUrl(album.id, file);
@@ -29,75 +25,91 @@ function fullUrl(file: string) {
 }
 ---
 
-<div class="max-w-5xl mx-auto px-6">
+<div class="max-w-5xl mx-auto px-6 py-10">
 
-  <!-- Sticky preview window -->
-  <div class="sticky top-0 z-10 bg-[var(--color-bg)] pt-8 pb-4 border-b border-[var(--color-border)]">
+  <!-- Album header -->
+  <div class="mb-8">
+    <h1 class="text-2xl font-medium text-[var(--color-accent)]">{title}</h1>
+    <p class="text-sm text-[var(--color-muted)] mt-1">
+      {location ? `${location} · ` : ''}{year} · {photos.length} photo{photos.length !== 1 ? 's' : ''}
+    </p>
+    {description && (
+      <p class="text-sm text-[var(--color-text)] mt-2 max-w-xl">{description}</p>
+    )}
+  </div>
 
-    <!-- Album header -->
-    <div class="mb-4">
-      <Breadcrumbs crumbs={breadcrumbs} />
-      <h1 class="text-2xl font-medium text-[var(--color-accent)]">{title}</h1>
-      <p class="text-sm text-[var(--color-muted)] mt-1">
-        {location ? `${location}, ` : ''}{year}
-      </p>
-      {description && (
-        <p class="text-sm text-[var(--color-text)] mt-2 max-w-xl">{description}</p>
-      )}
-    </div>
-
-    <!-- Preview image with mobile prev/next arrows -->
-    <div class="relative w-full max-w-2xl mx-auto h-[45vh] sm:h-[60vh]">
+  <!-- Photo masonry grid -->
+  <div id="photo-grid" class="columns-2 md:columns-3" style="column-gap: 5px;">
+    {previewPhotos.map((photo, i) => (
       <button
-        id="preview-prev"
-        class="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-11 h-11 flex items-center justify-center text-white/60 hover:text-white bg-black/30 hover:bg-black/60 transition-colors sm:hidden"
-        aria-label="Previous photo"
-      >&#x2039;</button>
-
-      <button
-        id="preview-btn"
-        class="w-full h-full cursor-zoom-in block flex items-center justify-center"
-        aria-label="View photo fullscreen"
+        class="gallery-photo block w-full p-0 border-0 bg-transparent mb-[5px] break-inside-avoid cursor-zoom-in"
+        data-src={fullUrl(photo.file)}
+        data-alt={photo.alt}
+        data-index={i}
+        aria-label={`View ${photo.alt}`}
       >
         <img
-          id="preview-img"
-          src={fullUrl(previewPhotos[0].file)}
-          alt={previewPhotos[0].alt}
-          class="w-full h-full object-contain transition-opacity duration-200"
+          src={thumbUrl(photo.file)}
+          alt={photo.alt}
+          class="w-full h-auto block"
+          loading={i < 6 ? 'eager' : 'lazy'}
         />
       </button>
-
-      <button
-        id="preview-next"
-        class="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-11 h-11 flex items-center justify-center text-white/60 hover:text-white bg-black/30 hover:bg-black/60 transition-colors sm:hidden"
-        aria-label="Next photo"
-      >&#x203A;</button>
-    </div>
+    ))}
   </div>
 
-  <!-- Thumbnail strip -->
-  <div class="pt-6 pb-8 flex flex-col items-center gap-3">
-    <div id="thumb-strip" class="flex gap-2 flex-nowrap overflow-x-auto w-full snap-x snap-mandatory">
-      {previewPhotos.map((photo, i) => (
-        <button
-          class:list={[
-            'thumb flex-shrink-0 w-16 h-16 overflow-hidden transition-opacity duration-150 snap-start',
-            i === 0 ? 'ring-1 ring-[var(--color-accent)] opacity-100' : 'opacity-40 hover:opacity-80'
-          ]}
-          data-src={fullUrl(photo.file)}
-          data-alt={photo.alt}
-          data-index={i}
-          aria-label={`View ${photo.alt}`}
-        >
-          <img src={thumbUrl(photo.file)} alt={photo.alt} class="w-full h-full object-cover" loading="lazy" />
-        </button>
-      ))}
+  <!-- Locked section — only rendered for protected albums with locked photos -->
+  {isProtected && lockedCount > 0 && (
+    <div id="locked-section" class="relative mt-[5px]">
+      <!-- Blurred placeholder tiles hinting at locked photos -->
+      <div class="columns-2 md:columns-3 blur-sm opacity-30 pointer-events-none select-none" style="column-gap: 5px;">
+        {Array.from({ length: Math.min(lockedCount, 9) }).map((_, i) => (
+          <div
+            class="mb-[5px] bg-[var(--color-surface)] break-inside-avoid"
+            style={`height: ${100 + (i % 3) * 30}px;`}
+          />
+        ))}
+      </div>
+
+      <!-- Password gate overlay -->
+      <div
+        id="password-gate"
+        class="absolute inset-0 flex items-center justify-center"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Album password"
+      >
+        <div class="bg-[var(--color-bg)] border border-[var(--color-border)] p-8 w-full max-w-sm mx-4 text-center">
+          <p class="text-sm text-[var(--color-muted)] mb-1">
+            {lockedCount} more photo{lockedCount !== 1 ? 's' : ''}
+          </p>
+          <p class="text-base text-[var(--color-text)] mb-6">Enter the password to view the full album</p>
+          <form id="password-form" class="flex flex-col sm:flex-row gap-3 justify-center">
+            <input
+              type="password"
+              id="password-input"
+              placeholder="Password"
+              class="flex-1 bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] px-4 py-2 text-sm outline-none focus:border-[var(--color-muted)] placeholder:text-[var(--color-muted)]"
+              autocomplete="current-password"
+              autofocus
+            />
+            <button
+              id="unlock-btn"
+              type="submit"
+              class="px-6 py-2 text-sm bg-white text-black hover:bg-[var(--color-text)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Unlock
+            </button>
+          </form>
+          <p id="password-error" class="text-xs text-red-400 mt-3 hidden">Incorrect password.</p>
+        </div>
+      </div>
     </div>
-    <p id="photo-count" class="text-xs text-[var(--color-muted)]"></p>
-  </div>
+  )}
+
 </div>
 
-<!-- Album config -->
+<!-- Album config for gallery.js -->
 <div
   id="album-config"
   data-album-id={album.id}
@@ -106,59 +118,25 @@ function fullUrl(file: string) {
   hidden
 ></div>
 
-<!-- Password gate -->
-{isProtected && lockedCount > 0 && (
-  <div
-    id="password-gate"
-    class="fixed inset-0 z-40 flex items-center justify-center bg-black/70 backdrop-blur-sm transition-opacity duration-200"
-    role="dialog"
-    aria-modal="true"
-    aria-label="Album password"
-  >
-    <div class="bg-[var(--color-bg)] border border-[var(--color-border)] p-8 w-full max-w-sm mx-4 text-center">
-      <p class="text-sm text-[var(--color-muted)] mb-1">
-        {lockedCount} more photo{lockedCount !== 1 ? 's' : ''}
-      </p>
-      <p class="text-base text-[var(--color-text)] mb-6">Enter the password to view the full album</p>
-      <form id="password-form" class="flex flex-col sm:flex-row gap-3 justify-center">
-        <input
-          type="password"
-          id="password-input"
-          placeholder="Password"
-          class="flex-1 bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] px-4 py-2 text-sm outline-none focus:border-[var(--color-muted)] placeholder:text-[var(--color-muted)]"
-          autocomplete="current-password"
-          autofocus
-        />
-        <button
-          id="unlock-btn"
-          type="submit"
-          class="px-6 py-2 text-sm bg-white text-black hover:bg-[var(--color-text)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Unlock
-        </button>
-      </form>
-      <p id="password-error" class="text-xs text-red-400 mt-3 hidden">Incorrect password.</p>
-    </div>
-  </div>
-)}
-
 <!-- Lightbox -->
 <div
   id="lightbox"
-  class="fixed inset-0 z-50 hidden items-center justify-center bg-black/95"
+  class="fixed inset-0 z-50 hidden items-center justify-center bg-black/97"
   role="dialog"
   aria-modal="true"
   aria-label="Photo lightbox"
 >
+  <p id="lightbox-counter" class="absolute top-5 left-6 text-xs text-white/40 select-none"></p>
+
   <button
     id="lightbox-close"
-    class="absolute top-5 right-6 text-white/50 hover:text-white text-2xl leading-none transition-colors"
+    class="absolute top-4 right-6 text-white/50 hover:text-white text-xl leading-none transition-colors"
     aria-label="Close"
   >&#x2715;</button>
 
   <button
     id="lightbox-prev"
-    class="absolute left-4 text-white/40 hover:text-white text-3xl leading-none transition-colors px-5 py-10"
+    class="absolute left-4 text-white/30 hover:text-white text-4xl leading-none transition-colors px-4 py-10"
     aria-label="Previous photo"
   >&#x2039;</button>
 
@@ -177,16 +155,9 @@ function fullUrl(file: string) {
 
   <button
     id="lightbox-next"
-    class="absolute right-4 text-white/40 hover:text-white text-3xl leading-none transition-colors px-5 py-10"
+    class="absolute right-4 text-white/30 hover:text-white text-4xl leading-none transition-colors px-4 py-10"
     aria-label="Next photo"
   >&#x203A;</button>
-
-  <p id="lightbox-counter" class="absolute bottom-5 left-0 right-0 text-center text-xs text-white/40 select-none"></p>
 </div>
-
-<style>
-  #thumb-strip { scrollbar-width: none; }
-  #thumb-strip::-webkit-scrollbar { display: none; }
-</style>
 
 <script src="/scripts/gallery.js" defer></script>
