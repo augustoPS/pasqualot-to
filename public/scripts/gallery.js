@@ -68,7 +68,8 @@
     lightbox.classList.add('hidden');
     lightbox.classList.remove('flex');
     document.body.style.overflow = '';
-    if (lightboxOpener) { lightboxOpener.focus(); lightboxOpener = null; }
+    if (lightboxOpener && document.contains(lightboxOpener)) { lightboxOpener.focus(); }
+    lightboxOpener = null;
   }
 
   function prev() { setLightboxImage((activeIndex - 1 + allPhotos.length) % allPhotos.length); }
@@ -236,11 +237,11 @@
     btn.disabled = true;
     btn.textContent = 'Unlocking…';
 
-    const input = document.getElementById('password-input').value;
+    const passwordInput = document.getElementById('password-input');
     const res = await fetch('/api/auth/album', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ album: albumId, password: input }),
+      body: JSON.stringify({ album: albumId, password: passwordInput.value }),
     });
 
     if (res.ok) {
@@ -251,9 +252,8 @@
       btn.textContent = 'Unlock';
       const err = document.getElementById('password-error');
       err.classList.remove('hidden');
-      const input = document.getElementById('password-input');
-      input.value = '';
-      input.addEventListener('input', () => err.classList.add('hidden'), { once: true });
+      passwordInput.value = '';
+      passwordInput.addEventListener('input', () => err.classList.add('hidden'), { once: true });
     }
   });
 })();
