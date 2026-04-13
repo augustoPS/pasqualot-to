@@ -1,6 +1,17 @@
 ---
 import { SITE_NAME, SHOW_BLOG, SHOW_NOTES } from '../config';
 
+interface Crumb {
+  label: string;
+  href?: string;
+}
+
+interface Props {
+  breadcrumbs?: Crumb[];
+}
+
+const { breadcrumbs = [] } = Astro.props;
+
 const links = [
   { href: '/', label: 'Gallery' },
   ...(SHOW_BLOG ? [{ href: '/blog', label: 'Blog' }] : []),
@@ -10,23 +21,56 @@ const links = [
 ];
 
 const currentPath = Astro.url.pathname;
+
+function isActive(href: string, label: string): boolean {
+  if (label === 'Gallery') {
+    return currentPath === '/' || currentPath.startsWith('/gallery');
+  }
+  return currentPath === href || (href !== '/' && currentPath.startsWith(href));
+}
 ---
 
 <nav class="flex items-center justify-between px-6 py-5 border-b border-[var(--color-border)] relative">
-  <a href="/" class="text-sm font-medium tracking-widest uppercase text-[var(--color-accent)] hover:opacity-70 transition-opacity">
-    {SITE_NAME}
-  </a>
+  <!-- Left: logo, or logo + inline breadcrumb path -->
+  <div class="flex items-center gap-2 min-w-0 flex-1 mr-8 overflow-hidden">
+    <a
+      href="/"
+      class="text-xs font-medium tracking-widest uppercase text-[var(--color-accent)] hover:opacity-70 transition-opacity whitespace-nowrap shrink-0"
+    >
+      {SITE_NAME}
+    </a>
+    {breadcrumbs.map((crumb, i) => {
+      const isLast = i === breadcrumbs.length - 1;
+      return (
+        <>
+          <span class="text-[#2d2d2d] text-xs shrink-0 hidden sm:inline">/</span>
+          {isLast ? (
+            <span class="text-xs text-[#ccc] whitespace-nowrap overflow-hidden text-ellipsis hidden sm:inline">
+              {crumb.label}
+            </span>
+          ) : (
+            <a
+              href={crumb.href}
+              class="text-xs text-[var(--color-muted)] hover:text-[var(--color-text)] transition-colors whitespace-nowrap shrink-0 hidden sm:inline"
+            >
+              {crumb.label}
+            </a>
+          )}
+        </>
+      );
+    })}
+  </div>
 
   <!-- Desktop links -->
-  <ul class="hidden sm:flex gap-6">
+  <ul class="hidden sm:flex gap-6 shrink-0">
     {links.map(({ href, label }) => (
       <li>
         <a
           href={href}
           class:list={[
-            'text-sm transition-colors',
-            currentPath === href || (href !== '/' && currentPath.startsWith(href))
-              ? 'text-[var(--color-accent)]'
+            'text-xs transition-colors whitespace-nowrap',
+            isActive(href, label)
+              ? 'text-[var(--color-accent)] border-b border-[var(--color-accent)] pb-0.5'
               : 'text-[var(--color-muted)] hover:text-[var(--color-text)]',
           ]}
         >
@@ -39,7 +83,7 @@ const currentPath = Astro.url.pathname;
   <!-- Mobile hamburger -->
   <button
     id="nav-toggle"
-    class="sm:hidden flex flex-col gap-1.5 p-1"
+    class="sm:hidden flex flex-col gap-1.5 p-1 shrink-0"
     aria-label="Toggle menu"
     aria-expanded="false"
   >
@@ -61,8 +105,8 @@ const currentPath = Astro.url.pathname;
           href={href}
           class:list={[
             'text-sm transition-colors',
-            currentPath === href || (href !== '/' && currentPath.startsWith(href))
-              ? 'text-[var(--color-accent)]'
+            isActive(href, label)
+              ? 'text-[var(--color-accent)] border-b border-[var(--color-accent)] pb-0.5'
               : 'text-[var(--color-muted)]',
           ]}
         >

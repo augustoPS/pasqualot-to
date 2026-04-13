@@ -3,13 +3,19 @@ import '../styles/global.css';
 import Nav from '../components/Nav.astro';
 import { SITE_NAME, SITE_DESCRIPTION } from '../config';
 
+interface Crumb {
+  label: string;
+  href?: string;
+}
+
 interface Props {
   title?: string;
   description?: string;
   ogImage?: string;
+  breadcrumbs?: Crumb[];
 }
 
-const { title, description = SITE_DESCRIPTION, ogImage } = Astro.props;
+const { title, description = SITE_DESCRIPTION, ogImage, breadcrumbs } = Astro.props;
 const pageTitle = title ? `${title} — ${SITE_NAME}` : SITE_NAME;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin);
 ---
@@ -33,7 +39,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin)
     <title>{pageTitle}</title>
   </head>
   <body class="flex flex-col min-h-screen">
-    <Nav />
+    <Nav breadcrumbs={breadcrumbs} />
     <main class="flex-1">
       <slot />
     </main>
