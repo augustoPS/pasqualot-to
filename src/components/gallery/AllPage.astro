@@ -1,6 +1,5 @@
 ---
 import type { CollectionEntry } from 'astro:content';
-import Breadcrumbs from './Breadcrumbs.astro';
 
 interface AlbumGroup {
   album: CollectionEntry<'albums'>;
@@ -10,17 +9,15 @@ interface AlbumGroup {
 interface Props {
   collection: CollectionEntry<'albumCollections'>;
   groups: AlbumGroup[];
-  breadcrumbs: { label: string; href: string }[];
 }
 
-const { collection, groups, breadcrumbs } = Astro.props;
+const { collection, groups } = Astro.props;
 const { title, date, location, description } = collection.data;
 const year = new Date(date).getFullYear();
 const totalPhotos = groups.reduce((n, g) => n + g.photos.length, 0);
 ---
 
 <div class="max-w-5xl mx-auto px-6 py-8">
-  <Breadcrumbs crumbs={breadcrumbs} />
   <h1 class="text-2xl font-medium text-[var(--color-accent)]">{title} — All</h1>
   <p class="text-sm text-[var(--color-muted)] mt-1">
     {location ? `${location}, ` : ''}{year}
