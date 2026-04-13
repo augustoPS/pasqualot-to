@@ -91,7 +91,6 @@ function fullUrl(file: string) {
               placeholder="Password"
               class="flex-1 bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] px-4 py-2 text-sm outline-none focus:border-[var(--color-muted)] placeholder:text-[var(--color-muted)]"
               autocomplete="current-password"
-              autofocus
             />
             <button
               id="unlock-btn"
@@ -114,7 +113,7 @@ function fullUrl(file: string) {
   id="album-config"
   data-album-id={album.id}
   data-is-protected={String(isProtected)}
-  data-preview-count={String(previewCount)}
+  data-preview-count={String(previewCount ?? 0)}
   hidden
 ></div>
 
