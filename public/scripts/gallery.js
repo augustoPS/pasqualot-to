@@ -1,104 +1,132 @@
-// Gallery page script — loaded as an external file so CSP can use script-src 'self'
-// Album-specific data is passed via data-* attributes on #album-config.
+// Gallery page script — CSP-safe (no inline handlers), loaded via <script src defer>.
+// Reads photo data from .gallery-photo buttons in #photo-grid.
+// Opens lightbox on click; handles keyboard, swipe, and password gate.
 
 (function () {
   const cfg = document.getElementById('album-config');
+  if (!cfg) return; // not an album page
+
   const isProtected = cfg.dataset.isProtected === 'true';
-  const albumId     = cfg.dataset.albumId;
-  const previewCount = parseInt(cfg.dataset.previewCount, 10);
+  const albumId = cfg.dataset.albumId;
 
+  // ── Photo list ────────────────────────────────────────────────────────────
+  // Built from .gallery-photo buttons already in the DOM.
+  // After unlock, locked photos are appended and this list is extended.
   let allPhotos = [];
-  let activeIndex = 0;
 
-  const previewImg  = document.getElementById('preview-img');
-  const strip       = document.getElementById('thumb-strip');
-  const photoCount  = document.getElementById('photo-count');
-  const previewPrev = document.getElementById('preview-prev');
-  const previewNext = document.getElementById('preview-next');
-
-  // Show loading state for the initial preview image if it hasn't loaded yet
-  if (!previewImg.complete) {
-    previewImg.classList.add('opacity-50');
-    previewImg.addEventListener('load', () => previewImg.classList.remove('opacity-50'), { once: true });
-  }
-
-  // Collect initially rendered preview photos
-  document.querySelectorAll('.thumb').forEach(btn => {
-    allPhotos.push({ src: btn.dataset.src, alt: btn.dataset.alt, thumbSrc: btn.querySelector('img')?.src });
-  });
-  updatePhotoCount();
-  updatePreviewArrows();
-
-  function selectPhoto(index) {
-    activeIndex = index;
-    const photo = allPhotos[index];
-
-    previewImg.classList.add('opacity-50');
-    previewImg.onload = () => previewImg.classList.remove('opacity-50');
-    previewImg.src = photo.src;
-    previewImg.alt = photo.alt;
-
-    schedulePreload(index);
-
-    const activeBtn = strip.querySelector(`[data-index="${index}"]`);
-    if (activeBtn) activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-
-    document.querySelectorAll('.thumb').forEach(btn => {
-      const active = Number(btn.dataset.index) === index;
-      btn.classList.toggle('ring-1', active);
-      btn.classList.toggle('ring-[var(--color-accent)]', active);
-      btn.classList.toggle('opacity-100', active);
-      btn.classList.toggle('opacity-40', !active);
+  function collectPhotos() {
+    allPhotos = [];
+    document.querySelectorAll('#photo-grid .gallery-photo').forEach((btn, i) => {
+      allPhotos.push({
+        src: btn.dataset.src,
+        alt: btn.dataset.alt,
+      });
+      btn.dataset.index = String(i);
     });
   }
 
-  function updatePhotoCount() {
-    if (!photoCount) return;
-    photoCount.textContent = `${allPhotos.length} photo${allPhotos.length !== 1 ? 's' : ''}`;
+  collectPhotos();
+
+  // ── Lightbox ──────────────────────────────────────────────────────────────
+  const lightbox        = document.getElementById('lightbox');
+  const lightboxImg     = document.getElementById('lightbox-img');
+  const lightboxLoader  = document.getElementById('lightbox-loader');
+  const lightboxCounter = document.getElementById('lightbox-counter');
+  const lightboxClose   = document.getElementById('lightbox-close');
+  const lightboxPrevBtn = document.getElementById('lightbox-prev');
+  const lightboxNextBtn = document.getElementById('lightbox-next');
+
+  let activeIndex = 0;
+  let lightboxOpener = null;
+
+  function setLightboxImage(index) {
+    activeIndex = index;
+    const photo = allPhotos[index];
+    lightboxImg.classList.add('opacity-0');
+    lightboxLoader.classList.remove('hidden');
+    lightboxImg.onload = () => {
+      lightboxImg.classList.remove('opacity-0');
+      lightboxLoader.classList.add('hidden');
+    };
+    lightboxImg.src = photo.src;
+    lightboxImg.alt = photo.alt;
+    lightboxCounter.textContent = `${index + 1} / ${allPhotos.length}`;
+    schedulePreload(index);
   }
 
-  function updatePreviewArrows() {
-    if (!previewPrev || !previewNext) return;
-    const hide = allPhotos.length <= 1;
-    previewPrev.style.display = hide ? 'none' : '';
-    previewNext.style.display = hide ? 'none' : '';
+  function openLightbox(index) {
+    lightboxOpener = document.activeElement;
+    activeIndex = index;
+    lightbox.classList.remove('hidden');
+    lightbox.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+    setLightboxImage(index);
+    lightboxClose.focus();
   }
 
-  window.previewNavigate = function (dir) {
-    selectPhoto((activeIndex + dir + allPhotos.length) % allPhotos.length);
-  };
-
-  function addThumb(photo, index) {
-    const btn = document.createElement('button');
-    btn.className = 'thumb flex-shrink-0 w-16 h-16 overflow-hidden transition-opacity duration-150 opacity-40 hover:opacity-80 snap-start';
-    btn.dataset.src   = photo.src;
-    btn.dataset.alt   = photo.alt;
-    btn.dataset.index = String(index);
-    btn.setAttribute('aria-label', `View ${photo.alt}`);
-    const img = document.createElement('img');
-    img.src = photo.thumbSrc ?? photo.src;
-    img.alt = photo.alt;
-    img.className = 'w-full h-full object-cover';
-    img.loading = 'lazy';
-    btn.appendChild(img);
-    btn.addEventListener('click', () => selectPhoto(index));
-    strip.appendChild(btn);
+  function closeLightbox() {
+    lightbox.classList.add('hidden');
+    lightbox.classList.remove('flex');
+    document.body.style.overflow = '';
+    if (lightboxOpener) { lightboxOpener.focus(); lightboxOpener = null; }
   }
 
-  // Bind existing thumbs
-  document.querySelectorAll('.thumb').forEach(btn => {
-    btn.addEventListener('click', () => selectPhoto(Number(btn.dataset.index)));
+  function prev() { setLightboxImage((activeIndex - 1 + allPhotos.length) % allPhotos.length); }
+  function next() { setLightboxImage((activeIndex + 1) % allPhotos.length); }
+
+  lightboxClose.addEventListener('click', closeLightbox);
+  lightboxPrevBtn.addEventListener('click', prev);
+  lightboxNextBtn.addEventListener('click', next);
+  lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
+
+  // Focus trap within lightbox
+  const focusable = [lightboxClose, lightboxPrevBtn, lightboxNextBtn];
+  lightbox.addEventListener('keydown', (e) => {
+    if (e.key !== 'Tab') return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey) {
+      if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+    } else {
+      if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
   });
 
-  // ── Proximity-based preloader ─────────────────────────────────────────────
+  // Keyboard nav
+  document.addEventListener('keydown', (e) => {
+    if (lightbox.classList.contains('hidden')) return;
+    if (e.key === 'Escape') closeLightbox();
+    else if (e.key === 'ArrowLeft') prev();
+    else if (e.key === 'ArrowRight') next();
+  });
+
+  // Swipe
+  let swipeStartX = null;
+  lightbox.addEventListener('touchstart', (e) => { swipeStartX = e.touches[0].clientX; }, { passive: true });
+  lightbox.addEventListener('touchend', (e) => {
+    if (swipeStartX === null) return;
+    const delta = e.changedTouches[0].clientX - swipeStartX;
+    swipeStartX = null;
+    if (Math.abs(delta) < 50) return;
+    if (delta < 0) next(); else prev();
+  }, { passive: true });
+
+  // ── Click-to-open on masonry grid ─────────────────────────────────────────
+  function bindGridPhoto(btn) {
+    btn.addEventListener('click', () => openLightbox(Number(btn.dataset.index)));
+  }
+
+  document.querySelectorAll('#photo-grid .gallery-photo').forEach(bindGridPhoto);
+
+  // ── Proximity preloader ───────────────────────────────────────────────────
   const preloaded = new Set();
   let preloadQueue = [];
   let preloadActive = 0;
-  const PRELOAD_CONCURRENCY = 2;
-  const PRELOAD_WINDOW = 3;
+  const CONCURRENCY = 2;
+  const WINDOW = 3;
 
   function runPreloadQueue() {
-    while (preloadActive < PRELOAD_CONCURRENCY && preloadQueue.length > 0) {
+    while (preloadActive < CONCURRENCY && preloadQueue.length > 0) {
       const src = preloadQueue.shift();
       if (preloaded.has(src)) continue;
       preloaded.add(src);
@@ -111,7 +139,7 @@
 
   function schedulePreload(centerIdx) {
     preloadQueue = [];
-    for (let d = 1; d <= PRELOAD_WINDOW; d++) {
+    for (let d = 1; d <= WINDOW; d++) {
       for (const idx of [centerIdx + d, centerIdx - d]) {
         const photo = allPhotos[idx];
         if (photo && !preloaded.has(photo.src)) preloadQueue.push(photo.src);
@@ -120,195 +148,112 @@
     runPreloadQueue();
   }
 
-  // ── Lightbox ──────────────────────────────────────────────────────────────
-  const lightbox       = document.getElementById('lightbox');
-  const lightboxImg    = document.getElementById('lightbox-img');
-  const lightboxLoader = document.getElementById('lightbox-loader');
-  const lightboxCounter = document.getElementById('lightbox-counter');
-
-  function setLightboxImage(src, alt) {
-    lightboxImg.classList.add('opacity-0');
-    lightboxLoader.classList.remove('hidden');
-    lightboxImg.onload = () => {
-      lightboxImg.classList.remove('opacity-0');
-      lightboxLoader.classList.add('hidden');
-    };
-    lightboxImg.src = src;
-    lightboxImg.alt = alt;
-    lightboxCounter.textContent = `${activeIndex + 1} / ${allPhotos.length}`;
-  }
-
-  const lightboxFocusable = ['lightbox-close', 'lightbox-prev', 'lightbox-next']
-    .map(id => document.getElementById(id));
-  let lightboxOpener = null;
-
-  window.openLightbox = function () {
-    lightboxOpener = document.activeElement;
-    lightbox.classList.remove('hidden');
-    lightbox.classList.add('flex');
-    document.body.style.overflow = 'hidden';
-    setLightboxImage(allPhotos[activeIndex].src, allPhotos[activeIndex].alt);
-    document.getElementById('lightbox-close').focus();
-  };
-
-  function closeLightbox() {
-    lightbox.classList.add('hidden');
-    lightbox.classList.remove('flex');
-    document.body.style.overflow = '';
-    if (lightboxOpener) { lightboxOpener.focus(); lightboxOpener = null; }
-  }
-
-  lightbox.addEventListener('keydown', (e) => {
-    if (e.key !== 'Tab') return;
-    const first = lightboxFocusable[0];
-    const last  = lightboxFocusable[lightboxFocusable.length - 1];
-    if (e.shiftKey) {
-      if (document.activeElement === first) { e.preventDefault(); last.focus(); }
-    } else {
-      if (document.activeElement === last)  { e.preventDefault(); first.focus(); }
-    }
-  });
-
-  function lightboxPrev() {
-    activeIndex = (activeIndex - 1 + allPhotos.length) % allPhotos.length;
-    setLightboxImage(allPhotos[activeIndex].src, allPhotos[activeIndex].alt);
-    schedulePreload(activeIndex);
-    selectPhoto(activeIndex);
-  }
-
-  function lightboxNext() {
-    activeIndex = (activeIndex + 1) % allPhotos.length;
-    setLightboxImage(allPhotos[activeIndex].src, allPhotos[activeIndex].alt);
-    schedulePreload(activeIndex);
-    selectPhoto(activeIndex);
-  }
-
-  document.getElementById('preview-btn').addEventListener('click', openLightbox);
-  document.getElementById('preview-prev').addEventListener('click', () => window.previewNavigate(-1));
-  document.getElementById('preview-next').addEventListener('click', () => window.previewNavigate(1));
-  document.getElementById('lightbox-close').addEventListener('click', closeLightbox);
-  document.getElementById('lightbox-prev').addEventListener('click', lightboxPrev);
-  document.getElementById('lightbox-next').addEventListener('click', lightboxNext);
-  lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
-
-  // ── Swipe ─────────────────────────────────────────────────────────────────
-  let swipeStartX = null;
-  const SWIPE_THRESHOLD = 50;
-  lightbox.addEventListener('touchstart', (e) => { swipeStartX = e.touches[0].clientX; }, { passive: true });
-  lightbox.addEventListener('touchend', (e) => {
-    if (swipeStartX === null) return;
-    const delta = e.changedTouches[0].clientX - swipeStartX;
-    swipeStartX = null;
-    if (Math.abs(delta) < SWIPE_THRESHOLD) return;
-    if (delta < 0) lightboxNext(); else lightboxPrev();
-  }, { passive: true });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !lightbox.classList.contains('hidden')) {
-      closeLightbox();
-    } else if (e.key === 'ArrowLeft') {
-      if (!lightbox.classList.contains('hidden')) lightboxPrev();
-      else selectPhoto((activeIndex - 1 + allPhotos.length) % allPhotos.length);
-    } else if (e.key === 'ArrowRight') {
-      if (!lightbox.classList.contains('hidden')) lightboxNext();
-      else selectPhoto((activeIndex + 1) % allPhotos.length);
-    }
-  });
-
   // ── Password gate ─────────────────────────────────────────────────────────
-  if (isProtected) {
-    const storageKey = `unlocked:${albumId}`;
-    const gate = document.getElementById('password-gate');
+  if (!isProtected) return;
 
-    const alreadyUnlocked = sessionStorage.getItem(storageKey) === 'true';
-    if (gate && !alreadyUnlocked) document.body.style.overflow = 'hidden';
+  const storageKey = `unlocked:${albumId}`;
+  const lockedSection = document.getElementById('locked-section');
+  const gate = document.getElementById('password-gate');
 
-    async function fetchAndUnlock() {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 10000);
-      let res;
-      try {
-        res = await fetch(`/api/albums/${albumId}/photos`, { signal: controller.signal });
-      } catch {
-        return 'network';
-      } finally {
-        clearTimeout(timeout);
-      }
-      if (res.status === 401 || res.status === 403) return 'expired';
-      if (!res.ok) return 'error';
-      const { photos: locked } = await res.json();
-      const startIndex = allPhotos.length;
-      locked.forEach((p, i) => {
-        const photo = { src: p.src, thumbSrc: p.thumbSrc, alt: p.alt };
-        allPhotos.push(photo);
-        addThumb(photo, startIndex + i);
-      });
-      updatePhotoCount();
-      updatePreviewArrows();
-      schedulePreload(activeIndex);
-      return true;
+  const alreadyUnlocked = sessionStorage.getItem(storageKey) === 'true';
+
+  async function fetchLockedPhotos() {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    let res;
+    try {
+      res = await fetch(`/api/albums/${albumId}/photos`, { signal: controller.signal });
+    } catch {
+      return 'network';
+    } finally {
+      clearTimeout(timeout);
     }
-
-    function showGateError(msg) {
-      if (gate) {
-        gate.style.opacity = '1';
-        gate.style.display = '';
-        document.body.style.overflow = 'hidden';
-      }
-      const btn = document.getElementById('unlock-btn');
-      if (btn) { btn.disabled = false; btn.textContent = 'Unlock'; }
-      const err = document.getElementById('password-error');
-      if (err) { err.textContent = msg; err.classList.remove('hidden'); }
-    }
-
-    async function unlock(fromSessionStorage = false) {
-      const result = await fetchAndUnlock();
-      if (result !== true) {
-        if (fromSessionStorage) sessionStorage.removeItem(storageKey);
-        const msg = result === 'expired'
-          ? 'Your session has expired. Please enter the password again.'
-          : 'Something went wrong. Please try again.';
-        showGateError(msg);
-        return;
-      }
-      document.body.style.overflow = '';
-      if (gate) {
-        gate.style.opacity = '0';
-        setTimeout(() => gate.remove(), 200);
-      }
-      document.getElementById('preview-btn')?.focus();
-    }
-
-    if (alreadyUnlocked) unlock(true);
-
-    document.getElementById('password-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const btn = document.getElementById('unlock-btn');
-      btn.disabled = true;
-      btn.textContent = 'Unlocking…';
-
-      const input = document.getElementById('password-input').value;
-      const res = await fetch('/api/auth/album', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ album: albumId, password: input }),
-      });
-
-      if (res.ok) {
-        sessionStorage.setItem(storageKey, 'true');
-        unlock();
-      } else {
-        btn.disabled = false;
-        btn.textContent = 'Unlock';
-        const err = document.getElementById('password-error');
-        err.classList.remove('hidden');
-        document.getElementById('password-input').value = '';
-        document.getElementById('password-input').addEventListener(
-          'input',
-          () => err.classList.add('hidden'),
-          { once: true }
-        );
-      }
-    });
+    if (res.status === 401 || res.status === 403) return 'expired';
+    if (!res.ok) return 'error';
+    return res.json();
   }
+
+  function appendLockedPhotos(photos) {
+    const grid = document.getElementById('photo-grid');
+    const startIndex = allPhotos.length;
+    photos.forEach((p, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'gallery-photo block w-full p-0 border-0 bg-transparent mb-[5px] break-inside-avoid cursor-zoom-in';
+      btn.dataset.src = p.src;
+      btn.dataset.alt = p.alt;
+      btn.dataset.index = String(startIndex + i);
+      btn.setAttribute('aria-label', `View ${p.alt}`);
+      const img = document.createElement('img');
+      img.src = p.thumbSrc;
+      img.alt = p.alt;
+      img.className = 'w-full h-auto block';
+      img.loading = 'lazy';
+      btn.appendChild(img);
+      bindGridPhoto(btn);
+      grid.appendChild(btn);
+    });
+    // Rebuild allPhotos from DOM so indices stay correct
+    collectPhotos();
+  }
+
+  function showGateError(msg) {
+    if (gate) {
+      gate.style.display = 'flex';
+      if (lockedSection) lockedSection.style.display = 'block';
+    }
+    const btn = document.getElementById('unlock-btn');
+    if (btn) { btn.disabled = false; btn.textContent = 'Unlock'; }
+    const err = document.getElementById('password-error');
+    if (err) { err.textContent = msg; err.classList.remove('hidden'); }
+  }
+
+  async function unlock(fromSessionStorage = false) {
+    const result = await fetchLockedPhotos();
+    if (typeof result !== 'object' || !result.photos) {
+      if (fromSessionStorage) sessionStorage.removeItem(storageKey);
+      const msg = result === 'expired'
+        ? 'Your session has expired. Please enter the password again.'
+        : 'Something went wrong. Please try again.';
+      showGateError(msg);
+      return;
+    }
+    // Remove locked section (blurred placeholders + gate)
+    if (lockedSection) {
+      lockedSection.style.opacity = '0';
+      lockedSection.style.transition = 'opacity 200ms';
+      setTimeout(() => lockedSection.remove(), 200);
+    }
+    appendLockedPhotos(result.photos);
+  }
+
+  if (alreadyUnlocked) {
+    unlock(true);
+  }
+
+  document.getElementById('password-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('unlock-btn');
+    btn.disabled = true;
+    btn.textContent = 'Unlocking…';
+
+    const input = document.getElementById('password-input').value;
+    const res = await fetch('/api/auth/album', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ album: albumId, password: input }),
+    });
+
+    if (res.ok) {
+      sessionStorage.setItem(storageKey, 'true');
+      unlock();
+    } else {
+      btn.disabled = false;
+      btn.textContent = 'Unlock';
+      const err = document.getElementById('password-error');
+      err.classList.remove('hidden');
+      const input = document.getElementById('password-input');
+      input.value = '';
+      input.addEventListener('input', () => err.classList.add('hidden'), { once: true });
+    }
+  });
 })();
