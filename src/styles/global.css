@@ -126,6 +126,14 @@
   --font-mono:     'IBM Plex Mono', ui-monospace, monospace;
 }
 
+/* Redeclare font variables outside @theme so they're unlayered and always win */
+:root {
+  --font-serif:   'Fraunces', Georgia, serif;
+  --font-display: 'Space Grotesk', 'Helvetica Neue', Helvetica, sans-serif;
+  --font-sans:    'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono:    'IBM Plex Mono', ui-monospace, monospace;
+}
+
 html {
   background-color: var(--color-bg);
   color: var(--color-ink);
