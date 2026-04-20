@@ -1,17 +1,104 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+
+const orient = import.meta.env.PUBLIC_ABOUT_PHOTO_ORIENTATION ?? 'portrait';
+const isPortrait = orient !== 'landscape';
+
+const gridCols = isPortrait ? '1fr 1.1fr' : '1.6fr 1fr';
+const aspectRatio = isPortrait ? '4/5' : '3/2';
+
+const aboutPhotoSrc = 'https://photos.pasqualo.to/about/portrait.jpg';
 ---
 
 <BaseLayout title="About" breadcrumbs={[{ label: 'About' }]}>
-  <div class="max-w-xl mx-auto px-6 py-12">
-    <h1 class="text-2xl font-medium text-[var(--color-accent)] mb-8">About</h1>
-    <div class="space-y-4 text-sm text-[var(--color-text)] leading-relaxed">
-      <p>
-        Hi, I'm Pasqualotto. I take photos and build things.
-      </p>
-      <p>
-        This site is a place for my photography, notes, and personal projects.
-      </p>
+  <section
+    class="min-h-[calc(100vh-64px)] grid about-grid"
+    style={`grid-template-columns: ${gridCols};`}
+  >
+    <!-- Photo column -->
+    <div class="relative overflow-hidden about-photo" style={`aspect-ratio: ${aspectRatio};`}>
+      <img
+        src={aboutPhotoSrc}
+        alt="Augusto Pasqualoto"
+        class="absolute inset-0 w-full h-full object-cover"
+      />
     </div>
-  </div>
+
+    <!-- Text column -->
+    <div
+      class="flex flex-col justify-end px-16 py-20 about-text"
+      style="max-width: 600px;"
+    >
+      <p
+        class="mb-8"
+        style="font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-meta);"
+      >about —</p>
+
+      <h1
+        class="mb-10"
+        style="font-family: var(--font-serif); font-size: clamp(48px, 6vw, 80px); font-weight: 400; letter-spacing: -0.04em; line-height: 1.0; color: var(--color-ink);"
+      >Augusto<br />Pasqualoto</h1>
+
+      <div
+        class="space-y-5"
+        style="font-family: var(--font-sans); font-size: 17px; font-weight: 300; line-height: 1.7; color: var(--color-ink-muted);"
+      >
+        <p>
+          The shop is a side project — I photograph public events and people doing
+          things they love, and let them find themselves afterwards.
+        </p>
+        <p>
+          The main site is the personal stuff: friends, pets, trips.
+        </p>
+      </div>
+
+      <div class="mt-14">
+        <p
+          class="mb-4"
+          style="font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--color-dim);"
+        >Contact —</p>
+        <div
+          class="flex flex-col gap-2"
+          style="font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.10em; color: var(--color-meta);"
+        >
+          <a
+            href="mailto:gutao.paska@gmail.com"
+            class="hover:text-[var(--color-ink)] transition-colors"
+            style="text-decoration: none;"
+          >email — gutao.paska@gmail.com</a>
+          <a
+            href="https://instagram.com/augustops_"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="hover:text-[var(--color-ink)] transition-colors"
+            style="text-decoration: none;"
+          >instagram — @augustops_</a>
+          <a
+            href="https://github.com/augustoPS"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="hover:text-[var(--color-ink)] transition-colors"
+            style="text-decoration: none;"
+          >github — augustoPS</a>
+        </div>
+      </div>
+    </div>
+  </section>
 </BaseLayout>
+
+<style>
+  @media (max-width: 767px) {
+    .about-grid {
+      grid-template-columns: 1fr !important;
+    }
+    .about-photo {
+      aspect-ratio: 4/5;
+      position: relative;
+      min-height: 300px;
+    }
+    .about-text {
+      padding: 40px 24px 60px;
+      max-width: none;
+    }
+  }
+</style>
