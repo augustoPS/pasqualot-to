@@ -8,22 +8,23 @@
   --color-surface-2: #1d1d1d;
 
   /* Text */
-  --color-ink:       #efece5;
+  --color-ink:       #e8e6e1;
   --color-ink-muted: #b6b2a8;
   --color-meta:      #8a877e;
-  --color-dim:       #5a574f;
+  --color-dim:       #5a5750;
 
   /* Borders */
-  --color-line:      #242424;
-  --color-line-2:    #2e2e2e;
+  --color-line:      #1d1d1d;
+  --color-line-2:    #2a2a2a;
 
   /* Accent */
-  --color-accent:    #c9a96e;
+  --color-accent:    #c28e4f;
 
   /* Fonts */
-  --font-serif:  'Instrument Serif', Georgia, serif;
-  --font-sans:   'Inter', ui-sans-serif, system-ui, sans-serif;
-  --font-mono:   'JetBrains Mono', 'Fira Code', monospace;
+  --font-serif:    'Fraunces', Georgia, serif;
+  --font-display:  'Space Grotesk', 'Helvetica Neue', Helvetica, sans-serif;
+  --font-sans:     'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono:     'IBM Plex Mono', ui-monospace, monospace;
 }
 
 html {

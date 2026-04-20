@@ -19,12 +19,12 @@ const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
       {posts.map((post) => (
         <li>
           <a href={`/blog/${post.id}`} class="group block">
-            <p class="text-xs text-[var(--color-muted)] mb-1">{post.data.date}</p>
-            <p class="text-base font-medium text-[var(--color-text)] group-hover:text-[var(--color-accent)] transition-colors">
+            <p class="text-xs text-[var(--color-meta)] mb-1">{post.data.date}</p>
+            <p class="text-base font-medium text-[var(--color-ink)] group-hover:text-[var(--color-accent)] transition-colors">
               {post.data.title}
             </p>
             {post.data.description && (
-              <p class="text-sm text-[var(--color-muted)] mt-1">{post.data.description}</p>
+              <p class="text-sm text-[var(--color-meta)] mt-1">{post.data.description}</p>
             )}
           </a>
         </li>

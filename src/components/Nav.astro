@@ -34,61 +34,45 @@ const hasBreadcrumbs = breadcrumbs.length > 0;
   class="sticky top-0 z-40 border-b"
   style="border-color: var(--color-line); background-color: var(--color-bg);"
 >
-  <!-- Top row: logo (left) + nav links (right) — same on all viewports -->
-  <div class="flex items-center justify-between px-6 md:px-10 py-4">
-    <!-- Logo -->
+  <div class="flex items-baseline justify-between px-6 md:px-10 py-5">
+
+    <!-- Logo with optional inline breadcrumb path -->
     <a
       href="/"
-      style="font-family: var(--font-serif); font-size: 15px; font-weight: 400; color: var(--color-ink); text-decoration: none; letter-spacing: 0;"
+      style="font-family: var(--font-display); font-size: 15px; font-weight: 500; letter-spacing: -0.02em; color: var(--color-ink); text-decoration: none;"
     >
       {SITE_NAME}
+      {hasBreadcrumbs && breadcrumbs.map((crumb, i) => {
+        const isLast = i === breadcrumbs.length - 1;
+        return (
+          <>
+            <span style="color: var(--color-dim); font-weight: 300; margin: 0 6px;">/</span>
+            {isLast ? (
+              <span>{crumb.label.toLowerCase()}</span>
+            ) : (
+              <a
+                href={crumb.href}
+                style="color: var(--color-meta); font-weight: 400; text-decoration: none;"
+                onclick="event.stopPropagation()"
+              >{crumb.label.toLowerCase()}</a>
+            )}
+          </>
+        );
+      })}
     </a>
 
-    <!-- Nav links — always inline, both mobile and desktop -->
-    <nav class="flex items-center gap-5 md:gap-8">
+    <!-- Nav links -->
+    <nav class="flex items-center gap-5 md:gap-6">
       {links.map(({ href, label }) => (
         <a
           href={href}
           target={href.startsWith('http') ? '_blank' : undefined}
           rel={href.startsWith('http') ? 'noopener noreferrer' : undefined}
-          style={`font-family: var(--font-mono); font-size: 10px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: ${isActive(href, label) ? 'var(--color-ink)' : 'var(--color-meta)'}; text-decoration: none; border-bottom: ${isActive(href, label) ? '1px solid var(--color-accent)' : 'none'}; padding-bottom: ${isActive(href, label) ? '2px' : '0'}; transition: color 0.15s;`}
+          style={`font-family: var(--font-display); font-size: 11px; font-weight: 500; letter-spacing: 0.08em; color: ${isActive(href, label) ? 'var(--color-ink)' : 'var(--color-meta)'}; text-decoration: none; border-bottom: ${isActive(href, label) ? '1px solid var(--color-ink)' : 'none'}; padding-bottom: ${isActive(href, label) ? '2px' : '0'}; transition: color 0.15s;`}
         >
           {label}
         </a>
       ))}
     </nav>
   </div>
-
-  <!-- Breadcrumb row — only shown when breadcrumbs exist -->
-  {hasBreadcrumbs && (
-    <div
-      class="flex items-center px-6 md:px-10 pb-3 gap-0"
-    >
-      <a
-        href="/"
-        style="font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-dim); text-decoration: none;"
-      >{SITE_NAME}</a>
-      {breadcrumbs.map((crumb, i) => {
-        const isLast = i === breadcrumbs.length - 1;
-        return (
-          <>
-            <span
-              class="mx-2"
-              style="font-family: var(--font-mono); font-size: 10px; color: var(--color-dim);"
-            >/</span>
-            {isLast ? (
-              <span
-                style="font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-ink);"
-              >{crumb.label.toUpperCase()}</span>
-            ) : (
-              <a
-                href={crumb.href}
-                style="font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-dim); text-decoration: none;"
-              >{crumb.label.toUpperCase()}</a>
-            )}
-          </>
-        );
-      })}
-    </div>
-  )}
 </header>

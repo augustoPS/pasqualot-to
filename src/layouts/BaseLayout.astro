@@ -1,5 +1,18 @@
 ---
 import '../styles/global.css';
+import '@fontsource/fraunces/300.css';
+import '@fontsource/fraunces/400.css';
+import '@fontsource/fraunces/300-italic.css';
+import '@fontsource/fraunces/400-italic.css';
+import '@fontsource/space-grotesk/400.css';
+import '@fontsource/space-grotesk/500.css';
+import '@fontsource/inter/300.css';
+import '@fontsource/inter/400.css';
+import '@fontsource/inter/500.css';
+import '@fontsource/ibm-plex-mono/300.css';
+import '@fontsource/ibm-plex-mono/400.css';
+import '@fontsource/ibm-plex-mono/400-italic.css';
+import '@fontsource/ibm-plex-mono/500.css';
 import Nav from '../components/Nav.astro';
 import { SITE_NAME, SITE_DESCRIPTION } from '../config';
 
@@ -28,10 +41,6 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin)
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalURL} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" />
-
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonicalURL} />

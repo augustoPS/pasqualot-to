@@ -17,15 +17,15 @@ const notes = (await getCollection('notes')).sort(
       {notes.map((note) => (
         <li>
           <a href={`/notes/${note.id}`} class="group block">
-            <p class="text-xs text-[var(--color-muted)] mb-1">{note.data.date}</p>
-            <p class="text-base font-medium text-[var(--color-text)] group-hover:text-[var(--color-accent)] transition-colors">
+            <p class="text-xs text-[var(--color-meta)] mb-1">{note.data.date}</p>
+            <p class="text-base font-medium text-[var(--color-ink)] group-hover:text-[var(--color-accent)] transition-colors">
               {note.data.title}
             </p>
           </a>
         </li>
       ))}
       {notes.length === 0 && (
-        <p class="text-sm text-[var(--color-muted)]">Nothing here yet.</p>
+        <p class="text-sm text-[var(--color-meta)]">Nothing here yet.</p>
       )}
     </ul>
   </div>

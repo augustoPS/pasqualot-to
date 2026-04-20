@@ -19,28 +19,28 @@ const totalPhotos = groups.reduce((n, g) => n + g.photos.length, 0);
 
 <div class="max-w-5xl mx-auto px-6 py-8">
   <h1 class="text-2xl font-medium text-[var(--color-accent)]">{title} — All</h1>
-  <p class="text-sm text-[var(--color-muted)] mt-1">
+  <p class="text-sm text-[var(--color-meta)] mt-1">
     {location ? `${location}, ` : ''}{year}
     {totalPhotos > 0 && ` · ${totalPhotos} photo${totalPhotos !== 1 ? 's' : ''}`}
   </p>
   {description && (
-    <p class="text-sm text-[var(--color-text)] mt-2 max-w-xl">{description}</p>
+    <p class="text-sm text-[var(--color-ink)] mt-2 max-w-xl">{description}</p>
   )}
 
   {groups.length === 0 ? (
-    <p class="text-[var(--color-muted)] text-sm mt-8">No photos.</p>
+    <p class="text-[var(--color-meta)] text-sm mt-8">No photos.</p>
   ) : (
     <div class="mt-8 flex flex-col gap-10">
       {groups.map((group) => (
         <section>
-          <div class="flex items-baseline gap-3 mb-3 border-b border-[var(--color-border)] pb-2">
+          <div class="flex items-baseline gap-3 mb-3 border-b border-[var(--color-line)] pb-2">
             <a
               href={`/gallery/${group.album.id}`}
-              class="text-sm font-medium text-[var(--color-text)] hover:text-[var(--color-accent)] transition-colors"
+              class="text-sm font-medium text-[var(--color-ink)] hover:text-[var(--color-accent)] transition-colors"
             >
               {group.album.data.title}
             </a>
-            <span class="text-xs text-[var(--color-muted)]">{group.photos.length} photos</span>
+            <span class="text-xs text-[var(--color-meta)]">{group.photos.length} photos</span>
           </div>
           <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-1.5">
             {group.photos.map((photo) => (
