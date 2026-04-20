@@ -160,6 +160,6 @@ const hasBreadcrumbs = breadcrumbs.length > 0;
   closeBtn?.addEventListener('click', closeDrawer);
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeDrawer();
+    if (e.key === 'Escape' && hamburger?.getAttribute('aria-expanded') === 'true') closeDrawer();
   });
 </script>
