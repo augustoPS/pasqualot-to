@@ -34,10 +34,10 @@ const { featuredCoverSrc, featuredHref } = Astro.props;
   {featuredCoverSrc && (
     <a
       href={featuredHref ?? '/'}
-      class="hidden md:block md:w-[45%] shrink-0"
+      class="hidden md:flex md:w-[24%] shrink-0 items-end pb-16 pr-10"
       style="text-decoration: none;"
     >
-      <div class="w-full h-full" style="aspect-ratio: 4/5; min-height: 100%;">
+      <div class="w-full" style="aspect-ratio: 4/5; max-height: 40vh;">
         <img
           src={featuredCoverSrc}
           alt=""
