@@ -13,6 +13,8 @@ const albums = defineCollection({
       z.object({
         file: z.string(),
         alt: z.string(),
+        lens: z.string().optional(),
+        title: z.string().optional(),
       })
     ),
     protected: z.boolean().default(false),
@@ -56,6 +58,7 @@ const albumCollections = defineCollection({
     date: z.string(),
     location: z.string().optional(),
     description: z.string().optional(),
+    blurb: z.string().optional(),
     cover: z.string(),
     hidden: z.boolean().default(false),
     children: z.array(z.string()),
