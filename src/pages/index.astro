@@ -47,23 +47,33 @@ const cards: SeriesCardData[] = series.map((c, i) => {
     stackThumbs,
   };
 });
+
+const featured = cards[0];
 ---
 
 <BaseLayout>
-  <HomeHero />
+  <HomeHero
+    featuredCoverSrc={featured?.coverSrc}
+    featuredHref={featured?.href}
+  />
 
-  <section class="px-10 pb-24 max-w-[1200px] mx-auto">
-    <p
-      class="mb-8"
-      style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-meta);"
-    >
-      Albums —
-    </p>
+  <!-- Mobile CTA -->
+  <div class="md:hidden px-6 pb-10 pt-2">
+    <a
+      href="/gallery"
+      style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-ink); text-decoration: none; border-bottom: 1px solid var(--color-meta); padding-bottom: 2px;"
+    >ENTER THE GALLERY →</a>
+  </div>
 
+  <!-- Series grid -->
+  <section
+    class="px-10 pb-24"
+    style="border-top: 1px solid var(--color-line); padding-top: 60px; margin-top: 0;"
+  >
     {cards.length === 0 ? (
       <p style="color: var(--color-meta); font-size: 14px;">No series yet.</p>
     ) : (
-      <div class="flex flex-col md:grid md:grid-cols-2" style="gap: 20px;">
+      <div class="flex flex-col md:grid md:grid-cols-2 max-w-[1200px] mx-auto" style="gap: 20px;">
         {cards.map((card, i) => (
           <div
             class="md:contents"
