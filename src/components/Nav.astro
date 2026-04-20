@@ -39,7 +39,7 @@ const hasBreadcrumbs = breadcrumbs.length > 0;
     <!-- Logo with optional inline breadcrumb path -->
     <a
       href="/"
-      style="font-family: var(--font-display); font-size: 15px; font-weight: 500; letter-spacing: -0.02em; color: var(--color-ink); text-decoration: none;"
+      style="font-family: 'Space Grotesk', 'Helvetica Neue', Helvetica, sans-serif; font-size: 15px; font-weight: 500; letter-spacing: -0.02em; color: var(--color-ink); text-decoration: none;"
     >
       {SITE_NAME}
       {hasBreadcrumbs && breadcrumbs.map((crumb, i) => {
@@ -68,7 +68,7 @@ const hasBreadcrumbs = breadcrumbs.length > 0;
           href={href}
           target={href.startsWith('http') ? '_blank' : undefined}
           rel={href.startsWith('http') ? 'noopener noreferrer' : undefined}
-          style={`font-family: var(--font-display); font-size: 11px; font-weight: 500; letter-spacing: 0.08em; color: ${isActive(href, label) ? 'var(--color-ink)' : 'var(--color-meta)'}; text-decoration: none; border-bottom: ${isActive(href, label) ? '1px solid var(--color-ink)' : 'none'}; padding-bottom: ${isActive(href, label) ? '2px' : '0'}; transition: color 0.15s;`}
+          style={`font-family: 'Space Grotesk', 'Helvetica Neue', Helvetica, sans-serif; font-size: 11px; font-weight: 500; letter-spacing: 0.08em; color: ${isActive(href, label) ? 'var(--color-ink)' : 'var(--color-meta)'}; text-decoration: none; border-bottom: ${isActive(href, label) ? '1px solid var(--color-ink)' : 'none'}; padding-bottom: ${isActive(href, label) ? '2px' : '0'}; transition: color 0.15s;`}
         >
           {label}
         </a>

@@ -30,7 +30,7 @@
 html {
   background-color: var(--color-bg);
   color: var(--color-ink);
-  font-family: 'Fraunces', Georgia, serif;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
 
