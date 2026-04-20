@@ -11,14 +11,14 @@
   --color-ink:       #e8e6e1;
   --color-ink-muted: #b6b2a8;
   --color-meta:      #8a877e;
-  --color-dim:       #5a5750;
+  --color-dim:       #5a574f;
 
   /* Borders */
-  --color-line:      #1d1d1d;
+  --color-line:      #242424;
   --color-line-2:    #2a2a2a;
 
   /* Accent */
-  --color-accent:    #c28e4f;
+  --color-accent:    #c9a96e;
 
   /* Fonts — also declared in BaseLayout <style> to bypass Tailwind processing */
   --font-serif:    'Fraunces', Georgia, serif;
