@@ -126,6 +126,7 @@
       img.src = photo.src;
       img.alt = photo.alt;
       img.style.opacity = '1';
+      img.style.transition = 'none';
     }, 150);
     updateMeta();
     updateButtons();
