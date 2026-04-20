@@ -1,32 +1,24 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 
-const orient = import.meta.env.PUBLIC_ABOUT_PHOTO_ORIENTATION ?? 'portrait';
-const isPortrait = orient !== 'landscape';
-
-const gridCols = isPortrait ? '1fr 1.1fr' : '1.6fr 1fr';
-const aspectRatio = isPortrait ? '4/5' : '3/2';
-
 const aboutPhotoSrc = 'https://photos.pasqualo.to/about/portrait.jpg';
 ---
 
 <BaseLayout title="About" breadcrumbs={[{ label: 'About' }]}>
-  <section
-    class="min-h-[calc(100vh-64px)] grid about-grid"
-    style={`grid-template-columns: ${gridCols};`}
-  >
+  <section class="grid grid-cols-1 md:grid-cols-[1fr_1.1fr] min-h-[calc(100vh-64px)]">
+
     <!-- Photo column -->
-    <div class="relative overflow-hidden about-photo" style={`aspect-ratio: ${aspectRatio};`}>
+    <div class="relative overflow-hidden" style="min-height: 300px;">
       <img
         src={aboutPhotoSrc}
         alt="Augusto Pasqualoto"
-        class="absolute inset-0 w-full h-full object-cover"
+        class="absolute inset-0 w-full h-full object-cover object-top"
       />
     </div>
 
     <!-- Text column -->
     <div
-      class="flex flex-col justify-end px-16 py-20 about-text"
+      class="flex flex-col justify-end px-10 md:px-16 py-16 md:py-20"
       style="max-width: 600px;"
     >
       <p
@@ -90,19 +82,3 @@ const aboutPhotoSrc = 'https://photos.pasqualo.to/about/portrait.jpg';
   </section>
 </BaseLayout>
 
-<style>
-  @media (max-width: 767px) {
-    .about-grid {
-      grid-template-columns: 1fr !important;
-    }
-    .about-photo {
-      aspect-ratio: 4/5;
-      position: relative;
-      min-height: 300px;
-    }
-    .about-text {
-      padding: 40px 24px 60px;
-      max-width: none;
-    }
-  }
-</style>
