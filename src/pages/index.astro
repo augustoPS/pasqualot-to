@@ -1,103 +1,78 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { cdnUrl } from '../lib/photos';
+import HomeHero from '../components/home/HomeHero.astro';
+import SeriesCard from '../components/home/SeriesCard.astro';
+import { cdnUrl, cdnThumbUrl } from '../lib/photos';
 
 const allAlbums = await getCollection('albums');
 const allCollections = await getCollection('albumCollections');
 
 const childIds = new Set(allCollections.flatMap((c) => c.data.children));
-const topAlbums = allAlbums.filter((a) => !childIds.has(a.id));
-const topCollections = allCollections.filter((c) => !childIds.has(c.id) && !c.data.hidden);
 
-const nodes: {
-  id: string;
+const series = allCollections
+  .filter((c) => !childIds.has(c.id) && !c.data.hidden)
+  .sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
+
+interface SeriesCardData {
+  index: number;
   title: string;
   href: string;
   coverSrc: string;
   meta: string;
-  protected: boolean;
-  isCollection: boolean;
-  date: Date;
-}[] = [
-  ...topAlbums.map((a) => ({
-    id: a.id,
-    title: a.data.title,
-    href: `/gallery/${a.id}`,
-    coverSrc: cdnUrl(a.id, a.data.cover),
-    meta: a.data.location
-      ? `${a.data.location} · ${new Date(a.data.date).getFullYear()}`
-      : String(new Date(a.data.date).getFullYear()),
-    protected: a.data.protected,
-    isCollection: false,
-    date: new Date(a.data.date),
-  })),
-  ...topCollections.map((c) => ({
-    id: c.id,
+  albumCount: number;
+  stackThumbs: { src: string; alt: string }[];
+}
+
+const cards: SeriesCardData[] = series.map((c, i) => {
+  const childAlbums = c.data.children
+    .map((id) => allAlbums.find((a) => a.id === id))
+    .filter(Boolean);
+
+  const stackThumbs = childAlbums.slice(0, 3).map((a) => ({
+    src: cdnThumbUrl(a!.id, a!.data.cover),
+    alt: a!.data.title,
+  }));
+
+  const year = new Date(c.data.date).getFullYear();
+  const meta = c.data.location ? `${c.data.location} · ${year}` : String(year);
+
+  return {
+    index: i + 1,
     title: c.data.title,
     href: `/gallery/${c.id}`,
     coverSrc: cdnUrl(c.id, c.data.cover),
-    meta: c.data.location
-      ? `${c.data.location} · ${new Date(c.data.date).getFullYear()}`
-      : String(new Date(c.data.date).getFullYear()),
-    protected: false,
-    isCollection: true,
-    date: new Date(c.data.date),
-  })),
-].sort((a, b) => b.date.getTime() - a.date.getTime());
+    meta,
+    albumCount: childAlbums.length,
+    stackThumbs,
+  };
+});
 ---
 
 <BaseLayout>
-  <section class="max-w-5xl mx-auto px-6 py-12">
-    {nodes.length === 0 ? (
-      <p class="text-[var(--color-muted)] text-sm">No albums yet.</p>
+  <HomeHero />
+
+  <section class="px-10 pb-24 max-w-[1200px] mx-auto">
+    <p
+      class="mb-8"
+      style="font-family: var(--font-mono); font-size: 10px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-meta);"
+    >
+      Albums —
+    </p>
+
+    {cards.length === 0 ? (
+      <p style="color: var(--color-meta); font-size: 14px;">No series yet.</p>
     ) : (
-      <div class="columns-2 md:columns-3" style="column-gap: 6px;">
-        {nodes.map((node) => (
-          <a
-            href={node.href}
-            class="group block relative overflow-hidden mb-[6px] break-inside-avoid cursor-pointer"
+      <div class="flex flex-col md:grid md:grid-cols-2" style="gap: 20px;">
+        {cards.map((card, i) => (
+          <div
+            class="md:contents"
+            style={`width: 80%; ${i % 2 === 0 ? 'margin-left: 20%;' : 'margin-right: 20%;'}`}
           >
-            <img
-              src={node.coverSrc}
-              alt={node.title}
-              class="w-full h-auto block"
-              loading="lazy"
-            />
-            <!-- Gradient overlay: hidden by default, revealed on hover -->
-            <div class="gallery-overlay absolute inset-0 bg-gradient-to-t from-black/75 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-            <!-- Title + meta: slide up on hover -->
-            <div class="gallery-text absolute bottom-0 left-0 right-0 p-3 translate-y-1 group-hover:translate-y-0 transition-transform duration-200">
-              <p class="text-sm font-medium text-white leading-tight">{node.title}</p>
-              <p class="text-xs text-[#aaa] mt-0.5 uppercase tracking-wide">{node.meta}</p>
-            </div>
-            <!-- Lock badge (protected) -->
-            {node.protected && (
-              <span class="gallery-badge absolute bottom-2 left-2 text-[var(--color-muted)] opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
-                </svg>
-                <span class="sr-only">Protected album</span>
-              </span>
-            )}
-            <!-- Collection badge -->
-            {node.isCollection && (
-              <span class="gallery-badge absolute bottom-2 right-2 text-[var(--color-muted)] text-xs bg-black/50 px-1.5 py-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                collection
-              </span>
-            )}
-          </a>
+            <SeriesCard {...card} />
+          </div>
         ))}
       </div>
     )}
   </section>
 </BaseLayout>
-
-<style>
-  /* On touch devices: always show overlay (no hover state) */
-  @media (hover: none) {
-    .gallery-overlay { opacity: 1 !important; }
-    .gallery-text { transform: translateY(0) !important; }
-    .gallery-badge { opacity: 1 !important; }
-  }
-</style>
