@@ -1,9 +1,9 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 
-const aboutPhotoSrc = 'https://photos.pasqualo.to/about/portrait.jpg';
 const orientation = import.meta.env.PUBLIC_ABOUT_PHOTO_ORIENTATION ?? 'portrait';
 const isLandscape = orientation === 'landscape';
+const aboutPhotoSrc = `https://photos.pasqualo.to/about/${orientation}.jpg`;
 ---
 
 <BaseLayout title="About" breadcrumbs={[{ label: 'About' }]}>
