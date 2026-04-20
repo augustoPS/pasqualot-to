@@ -42,8 +42,8 @@ function fullUrl(file: string) {
   <header class="mb-14 text-center">
     {(collection || (albumPosition && albumTotal)) && (
       <p
-        class="mb-4"
-        style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-meta);"
+        class="mb-4 ff-mono"
+        style="font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-meta);"
       >
         {collection?.data.title}
         {albumPosition && albumTotal && (
@@ -53,16 +53,17 @@ function fullUrl(file: string) {
       </p>
     )}
     <h1
-      style="font-family: 'Fraunces', Georgia, serif; font-size: clamp(48px, 7vw, 72px); font-weight: 300; font-style: normal; letter-spacing: -0.02em; line-height: 1.0; color: var(--color-ink);"
+      class="ff-serif"
+      style="font-size: clamp(48px, 7vw, 72px); font-weight: 300; font-style: normal; letter-spacing: -0.02em; line-height: 1.0; color: var(--color-ink);"
     >{title}.</h1>
     <p
-      class="mt-5"
-      style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-meta);"
+      class="mt-5 ff-mono"
+      style="font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-meta);"
     >{metaParts}</p>
     {description && (
       <p
-        class="mt-5 mx-auto max-w-xl"
-        style="font-family: 'Fraunces', Georgia, serif; font-size: 18px; font-weight: 400; line-height: 1.6; color: var(--color-ink-muted);"
+        class="mt-5 mx-auto max-w-xl ff-serif"
+        style="font-size: 18px; font-weight: 400; line-height: 1.6; color: var(--color-ink-muted);"
       >{description}</p>
     )}
   </header>
@@ -91,8 +92,8 @@ function fullUrl(file: string) {
             loading={i < 6 ? 'eager' : 'lazy'}
           />
           <span
-            class="block mt-1 mb-3"
-            style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.12em; color: var(--color-dim);"
+            class="block mt-1 mb-3 ff-mono"
+            style="font-size: 9px; letter-spacing: 0.12em; color: var(--color-dim);"
           >{String(i + 1).padStart(3, '0')}</span>
         </button>
       ))}
@@ -106,12 +107,12 @@ function fullUrl(file: string) {
       style="border-color: var(--color-line);"
     >
       <p
-        class="mb-2"
-        style="font-family: 'Fraunces', Georgia, serif; font-size: 19px; font-style: italic; color: var(--color-ink-muted);"
+        class="mb-2 ff-serif"
+        style="font-size: 19px; font-style: italic; color: var(--color-ink-muted);"
       >This album is protected.</p>
       <p
-        class="mb-8"
-        style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-meta);"
+        class="mb-8 ff-mono"
+        style="font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-meta);"
       >{lockedCount} more frame{lockedCount !== 1 ? 's' : ''} locked</p>
 
       <form id="password-form" class="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
@@ -120,22 +121,22 @@ function fullUrl(file: string) {
           id="password-input"
           placeholder="password"
           class="flex-1 px-4 py-2 text-sm outline-none"
-          style="background: var(--color-surface); border: 1px solid var(--color-line-2); color: var(--color-ink); font-family: 'IBM Plex Mono', ui-monospace, monospace; letter-spacing: 0.08em;"
+          style="background: var(--color-surface); border: 1px solid var(--color-line-2); color: var(--color-ink); letter-spacing: 0.08em;"
           autocomplete="current-password"
         />
         <button
           id="unlock-btn"
           type="submit"
-          class="px-6 py-2 transition-opacity disabled:opacity-40"
-          style="background: var(--color-ink); color: var(--color-bg); font-family: 'Space Grotesk', 'Helvetica Neue', Helvetica, sans-serif; font-size: 11px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; border: none; cursor: pointer;"
+          class="px-6 py-2 transition-opacity disabled:opacity-40 ff-display"
+          style="background: var(--color-ink); color: var(--color-bg); font-size: 11px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; border: none; cursor: pointer;"
         >
           Unlock
         </button>
       </form>
       <p
         id="password-error"
-        class="mt-4 hidden"
-        style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.12em; color: #c0392b;"
+        class="mt-4 hidden ff-mono"
+        style="font-size: 10px; letter-spacing: 0.12em; color: #c0392b;"
       >Incorrect password.</p>
     </div>
   )}
@@ -164,8 +165,8 @@ function fullUrl(file: string) {
             loading={i < 6 ? 'eager' : 'lazy'}
           />
           <span
-            class="block mt-1 mb-3"
-            style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.12em; color: var(--color-dim);"
+            class="block mt-1 mb-3 ff-mono"
+            style="font-size: 9px; letter-spacing: 0.12em; color: var(--color-dim);"
           >{String(i + 1).padStart(3, '0')}</span>
         </button>
       ))}
@@ -181,7 +182,8 @@ function fullUrl(file: string) {
       {prevAlbum && (
         <a
           href={`/gallery/${prevAlbum.id}`}
-          style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-meta); text-decoration: none;"
+          class="ff-mono"
+          style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-meta); text-decoration: none;"
         >← {prevAlbum.data.title}</a>
       )}
     </div>
@@ -190,11 +192,13 @@ function fullUrl(file: string) {
       {nextAlbum ? (
         <a
           href={`/gallery/${nextAlbum.id}`}
-          style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-meta); text-decoration: none;"
+          class="ff-mono"
+          style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-meta); text-decoration: none;"
         >{nextAlbum.data.title} →</a>
       ) : (
         <span
-          style="font-family: 'Fraunces', Georgia, serif; font-size: 12px; font-style: italic; color: var(--color-dim);"
+          class="ff-serif"
+          style="font-size: 12px; font-style: italic; color: var(--color-dim);"
         >end of series</span>
       )}
     </div>
@@ -224,21 +228,21 @@ function fullUrl(file: string) {
     id="lightbox-close"
     class="absolute top-5 right-6 z-10"
     aria-label="Close lightbox"
-    style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 20px; color: var(--color-meta); background: none; border: none; cursor: pointer; line-height: 1; padding: 10px;"
+    style="font-size: 20px; color: var(--color-meta); background: none; border: none; cursor: pointer; line-height: 1; padding: 10px;"
   >×</button>
 
   <button
     id="lightbox-prev"
     class="absolute left-4 top-1/2 -translate-y-1/2 z-10"
     aria-label="Previous photo"
-    style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 28px; color: rgba(182,178,168,0.4); background: none; border: none; cursor: pointer; padding: 20px 16px; transition: color 0.15s;"
+    style="font-size: 28px; color: rgba(182,178,168,0.4); background: none; border: none; cursor: pointer; padding: 20px 16px; transition: color 0.15s;"
   >‹</button>
 
   <button
     id="lightbox-next"
     class="absolute right-4 top-1/2 -translate-y-1/2 z-10"
     aria-label="Next photo"
-    style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 28px; color: rgba(182,178,168,0.4); background: none; border: none; cursor: pointer; padding: 20px 16px; transition: color 0.15s;"
+    style="font-size: 28px; color: rgba(182,178,168,0.4); background: none; border: none; cursor: pointer; padding: 20px 16px; transition: color 0.15s;"
   >›</button>
 
   <div id="lightbox-stage" class="absolute inset-0 flex items-center justify-center">
@@ -252,8 +256,8 @@ function fullUrl(file: string) {
 
   <div
     id="lightbox-meta"
-    class="absolute bottom-5 left-6"
-    style="font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: 0.12em; color: var(--color-meta);"
+    class="absolute bottom-5 left-6 ff-mono"
+    style="font-size: 10px; letter-spacing: 0.12em; color: var(--color-meta);"
   >
     <span id="lightbox-frame"></span>
     <span id="lightbox-lens" class="ml-4"></span>

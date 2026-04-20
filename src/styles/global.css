@@ -27,6 +27,12 @@
   --font-mono:     'IBM Plex Mono', ui-monospace, monospace;
 }
 
+/* Font family classes — applied via class="ff-serif" etc. so browser fetches fonts from CSS rules */
+.ff-serif   { font-family: 'Fraunces', Georgia, serif; }
+.ff-display { font-family: 'Space Grotesk', 'Helvetica Neue', Helvetica, sans-serif; }
+.ff-mono    { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+.ff-sans    { font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; }
+
 html {
   background-color: var(--color-bg);
   color: var(--color-ink);
