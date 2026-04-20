@@ -40,7 +40,7 @@ const aboutPhotoSrc = 'https://photos.pasqualo.to/about/portrait.jpg';
           circus people, friends running, action figures in afternoon light.
         </p>
         <p>
-          The <a href="https://shop.pasqualo.to" target="_blank" rel="noopener noreferrer" style="color: var(--color-ink-muted); text-decoration: underline; text-underline-offset: 3px;">shop</a> is a side project — I photograph public events and people doing
+          The <a href="https://shop.pasqualo.to" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--color-dim);">shop</a> is a side project — I photograph public events and people doing
           things they love, and let them find themselves afterwards.
         </p>
         <p>
@@ -48,35 +48,23 @@ const aboutPhotoSrc = 'https://photos.pasqualo.to/about/portrait.jpg';
         </p>
       </div>
 
-      <div class="mt-14">
-        <p
-          class="mb-4 ff-mono"
-          style="font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--color-dim);"
-        >Contact —</p>
-        <div
-          class="flex flex-col gap-2 ff-mono"
-          style="font-size: 11px; letter-spacing: 0.10em; color: var(--color-meta);"
-        >
-          <a
-            href="mailto:gutao.paska@gmail.com"
-            class="hover:text-[var(--color-ink)] transition-colors"
-            style="text-decoration: none;"
-          >email — gutao.paska@gmail.com</a>
-          <a
-            href="https://instagram.com/augustops_"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="hover:text-[var(--color-ink)] transition-colors"
-            style="text-decoration: none;"
-          >instagram — @augustops_</a>
-          <a
-            href="https://github.com/augustoPS"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="hover:text-[var(--color-ink)] transition-colors"
-            style="text-decoration: none;"
-          >github — augustoPS</a>
-        </div>
+      <div class="mt-14 pt-8 border-t" style="border-color: var(--color-line-2);">
+        <dl class="grid ff-mono" style="grid-template-columns: auto 1fr; gap: 6px 32px; font-size: 10px; letter-spacing: 0.12em;">
+          <dt style="text-transform: uppercase; color: var(--color-dim);">Email</dt>
+          <dd style="color: var(--color-meta); margin: 0;">
+            <a href="mailto:hi@pasqualo.to" style="color: inherit; text-decoration: none;">hi@pasqualo.to</a>
+          </dd>
+          <dt style="text-transform: uppercase; color: var(--color-dim);">Instagram</dt>
+          <dd style="color: var(--color-meta); margin: 0;">
+            <a href="https://instagram.com/augustops_" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">@pasqualotto.to</a>
+          </dd>
+          <dt style="text-transform: uppercase; color: var(--color-dim);">Shop</dt>
+          <dd style="color: var(--color-meta); margin: 0;">
+            <a href="https://shop.pasqualo.to" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">shop.pasqualo.to</a>
+          </dd>
+          <dt style="text-transform: uppercase; color: var(--color-dim);">Built with</dt>
+          <dd style="color: var(--color-meta); margin: 0;">astro · r2 · mercadopago</dd>
+        </dl>
       </div>
     </div>
   </section>
