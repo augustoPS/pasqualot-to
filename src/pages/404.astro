@@ -35,33 +35,52 @@ if (publicAlbums.length > 0) {
     </div>
 
     <!-- Right: copy -->
-    <div class="flex flex-col justify-center px-16 py-20">
+    <div class="flex flex-col justify-center px-8 md:px-16 py-20">
 
-      <!-- Kicker -->
-      <p
-        class="mb-6 ff-mono"
-        style="font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-meta);"
-      >404 — NOT FOUND</p>
+      <!-- Kicker — three tones -->
+      <p class="nf-copy nf-photographic mb-6 ff-mono" style="font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-meta);">404 — NOT FOUND</p>
+      <p class="nf-copy nf-dry hidden mb-6 ff-mono" style="font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-meta);">404 — NOT FOUND</p>
+      <p class="nf-copy nf-warm hidden mb-6 ff-mono" style="font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-meta);">HEY.</p>
 
-      <!-- Display headline -->
+      <!-- Headline (same across tones) -->
       <h1
         class="mb-4 ff-serif"
         style="font-weight: 400; letter-spacing: -0.04em; line-height: 1.0; color: var(--color-ink); font-size: clamp(80px, 10vw, 124px);"
       >4<em style="color: var(--color-accent);">0</em>4</h1>
 
-      <!-- Sub-kicker -->
-      <p
-        class="mb-6 ff-mono"
-        style="font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-meta);"
-      >FRAME NOT FOUND</p>
+      <!-- Sub-kicker — three tones -->
+      <p class="nf-copy nf-photographic mb-6 ff-mono" style="font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-meta);">FRAME NOT FOUND</p>
+      <p class="nf-copy nf-dry hidden mb-6 ff-mono" style="font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-meta);">FILE MISSING</p>
+      <p class="nf-copy nf-warm hidden mb-6 ff-mono" style="font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-meta);">WRONG TURN</p>
 
-      <!-- Body copy -->
-      <div class="ff-serif" style="font-size: 19px; line-height: 1.6; color: var(--color-ink-muted); max-width: 420px;">
+      <!-- Body — three tones -->
+      <div class="nf-copy nf-photographic ff-serif" style="font-size: 19px; line-height: 1.6; color: var(--color-ink-muted); max-width: 420px;">
         <p>
           The negative you're looking for isn't in the binder.
           While you're here — a frame from <em>{randomPhoto.albumTitle || 'the archive'}</em>
           {randomPhoto.albumDate && `, ${randomPhoto.albumDate}`}.
         </p>
+      </div>
+      <div class="nf-copy nf-dry hidden ff-serif" style="font-size: 19px; line-height: 1.6; color: var(--color-ink-muted); max-width: 420px;">
+        <p>
+          Wrong folder. Whatever it was, it's not here.
+          This frame is, though — from <em>{randomPhoto.albumTitle || 'the archive'}</em>
+          {randomPhoto.albumDate && `, ${randomPhoto.albumDate}`}.
+        </p>
+      </div>
+      <div class="nf-copy nf-warm hidden ff-serif" style="font-size: 19px; line-height: 1.6; color: var(--color-ink-muted); max-width: 420px;">
+        <p>
+          You ended up somewhere you didn't mean to — happens to the best of us.
+          While you're here, here's a frame from <em>{randomPhoto.albumTitle || 'the archive'}</em>
+          {randomPhoto.albumDate && `, ${randomPhoto.albumDate}`}.
+        </p>
+      </div>
+
+      <!-- Tone switcher pills -->
+      <div class="mt-8 flex items-center gap-3">
+        <button data-tone="photographic" class="nf-tone-btn ff-mono" style="font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; padding: 5px 10px; border: 1px solid var(--color-line-2); background: var(--color-ink); color: var(--color-bg); cursor: pointer;">PHOTOGRAPHIC</button>
+        <button data-tone="dry" class="nf-tone-btn ff-mono" style="font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; padding: 5px 10px; border: 1px solid var(--color-line-2); background: transparent; color: var(--color-meta); cursor: pointer;">DRY</button>
+        <button data-tone="warm" class="nf-tone-btn ff-mono" style="font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; padding: 5px 10px; border: 1px solid var(--color-line-2); background: transparent; color: var(--color-meta); cursor: pointer;">WARM</button>
       </div>
 
       <!-- Recovery links -->
@@ -72,7 +91,7 @@ if (publicAlbums.length > 0) {
           style="font-size: 12px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-ink); text-decoration: none; border: 1px solid var(--color-line-2); display: inline-block; padding: 10px 20px; transition: border-color 0.15s;"
         >← BACK TO GALLERY</a>
         <a
-          href="/gallery"
+          href="/"
           class="ff-display"
           style="font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-meta); text-decoration: none;"
         >SEE THE SERIES ARCHIVE</a>
@@ -81,3 +100,25 @@ if (publicAlbums.length > 0) {
   </section>
 </BaseLayout>
 
+<script>
+  const toneButtons = document.querySelectorAll<HTMLButtonElement>('.nf-tone-btn');
+
+  toneButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const tone = btn.dataset.tone;
+      if (!tone) return;
+
+      // Toggle copy blocks
+      document.querySelectorAll('.nf-copy').forEach((el) => {
+        (el as HTMLElement).classList.toggle('hidden', !el.classList.contains(`nf-${tone}`));
+      });
+
+      // Update button active state
+      toneButtons.forEach((b) => {
+        const isActive = b.dataset.tone === tone;
+        b.style.background = isActive ? 'var(--color-ink)' : 'transparent';
+        b.style.color = isActive ? 'var(--color-bg)' : 'var(--color-meta)';
+      });
+    });
+  });
+</script>
