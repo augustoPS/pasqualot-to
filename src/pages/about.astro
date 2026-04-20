@@ -2,17 +2,26 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 
 const aboutPhotoSrc = 'https://photos.pasqualo.to/about/portrait.jpg';
+const orientation = import.meta.env.PUBLIC_ABOUT_PHOTO_ORIENTATION ?? 'portrait';
+const isLandscape = orientation === 'landscape';
 ---
 
 <BaseLayout title="About" breadcrumbs={[{ label: 'About' }]}>
-  <section class="grid grid-cols-1 md:grid-cols-[1fr_1.1fr] min-h-[calc(100vh-64px)]">
+  <section
+    class={isLandscape
+      ? 'flex flex-col min-h-[calc(100vh-64px)]'
+      : 'grid grid-cols-1 md:grid-cols-[1fr_1.1fr] min-h-[calc(100vh-64px)]'}
+  >
 
-    <!-- Photo column -->
-    <div class="relative overflow-hidden" style="min-height: 300px;">
+    <!-- Photo -->
+    <div
+      class="relative overflow-hidden"
+      style={isLandscape ? 'aspect-ratio: 16/9; max-height: 55vh;' : 'min-height: 300px;'}
+    >
       <img
         src={aboutPhotoSrc}
         alt="Augusto Pasqualoto"
-        class="absolute inset-0 w-full h-full object-cover object-top"
+        class={`absolute inset-0 w-full h-full object-cover ${isLandscape ? 'object-center' : 'object-top'}`}
       />
     </div>
 
@@ -33,7 +42,7 @@ const aboutPhotoSrc = 'https://photos.pasqualo.to/about/portrait.jpg';
 
       <div
         class="space-y-5 ff-serif"
-        style="font-size: 17px; font-weight: 300; line-height: 1.7; color: var(--color-ink-muted);"
+        style="font-size: 19px; font-weight: 300; line-height: 1.7; color: var(--color-ink-muted);"
       >
         <p>
           Porto Alegre · hobbyist photographer. I shoot what's nearby — cats,
@@ -49,24 +58,23 @@ const aboutPhotoSrc = 'https://photos.pasqualo.to/about/portrait.jpg';
       </div>
 
       <div class="mt-14 pt-8 border-t" style="border-color: var(--color-line-2);">
-        <dl class="grid ff-mono" style="grid-template-columns: auto 1fr; gap: 6px 32px; font-size: 10px; letter-spacing: 0.12em;">
-          <dt style="text-transform: uppercase; color: var(--color-dim);">Email</dt>
-          <dd style="color: var(--color-meta); margin: 0;">
+        <div class="ff-mono" style="display: grid; grid-template-columns: auto 1fr; gap: 6px 32px; font-size: 10px; letter-spacing: 0.12em;">
+          <span style="text-transform: uppercase; color: var(--color-dim);">Email</span>
+          <span style="color: var(--color-meta);">
             <a href="mailto:hi@pasqualo.to" style="color: inherit; text-decoration: none;">hi@pasqualo.to</a>
-          </dd>
-          <dt style="text-transform: uppercase; color: var(--color-dim);">Instagram</dt>
-          <dd style="color: var(--color-meta); margin: 0;">
+          </span>
+          <span style="text-transform: uppercase; color: var(--color-dim);">Instagram</span>
+          <span style="color: var(--color-meta);">
             <a href="https://instagram.com/augustops_" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">@pasqualotto.to</a>
-          </dd>
-          <dt style="text-transform: uppercase; color: var(--color-dim);">Shop</dt>
-          <dd style="color: var(--color-meta); margin: 0;">
+          </span>
+          <span style="text-transform: uppercase; color: var(--color-dim);">Shop</span>
+          <span style="color: var(--color-meta);">
             <a href="https://shop.pasqualo.to" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">shop.pasqualo.to</a>
-          </dd>
-          <dt style="text-transform: uppercase; color: var(--color-dim);">Built with</dt>
-          <dd style="color: var(--color-meta); margin: 0;">astro · r2 · mercadopago</dd>
-        </dl>
+          </span>
+          <span style="text-transform: uppercase; color: var(--color-dim);">Built with</span>
+          <span style="color: var(--color-meta);">astro · r2 · mercadopago</span>
+        </div>
       </div>
     </div>
   </section>
 </BaseLayout>
-
