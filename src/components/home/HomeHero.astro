@@ -7,46 +7,49 @@ interface Props {
 const { featuredCoverSrc, featuredHref } = Astro.props;
 ---
 
-<section class="flex flex-col md:flex-row min-h-[80vh]">
-  <!-- Left: kicker + tagline + bio -->
-  <div class="flex flex-col justify-end px-10 pb-16 pt-24 flex-1">
-    <p
-      class="mb-6 ff-mono"
-      style="font-size: 10px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-meta);"
-    >
-      PASQUALO.TO · 2025–26
-    </p>
-    <h1
-      class="ff-serif"
-      style="font-size: clamp(36px, 4vw, 48px); font-weight: 300; letter-spacing: -0.015em; line-height: 1.05; color: var(--color-ink);"
-    >
-      Quietly,<br /><em style="font-style: italic; font-weight: 300; color: var(--color-ink-muted);">between takes.</em>
-    </h1>
-    <p
-      class="mt-5 max-w-xs ff-serif"
-      style="font-size: 15px; font-weight: 300; line-height: 1.65; color: var(--color-ink-muted);"
-    >
-      A small archive of photographs made in Porto Alegre
-      and elsewhere, mostly between other things.
-    </p>
-  </div>
+<section class="min-h-[80vh] flex items-stretch">
+  <div class="max-w-[1200px] mx-auto w-full flex flex-col md:flex-row">
 
-  <!-- Right: featured cover photo -->
-  {featuredCoverSrc && (
-    <a
-      href={featuredHref ?? '/'}
-      class="hidden md:block md:w-[45%] shrink-0"
-      style="text-decoration: none;"
-    >
-      <div class="w-full h-full" style="aspect-ratio: 4/5; min-height: 100%;">
-        <img
-          src={featuredCoverSrc}
-          alt=""
-          aria-hidden="true"
-          class="w-full h-full object-cover"
-          loading="eager"
-        />
-      </div>
-    </a>
-  )}
+    <!-- Left: kicker + tagline + bio -->
+    <div class="flex flex-col justify-end px-10 pb-16 pt-24 flex-1">
+      <p
+        class="mb-6 ff-mono"
+        style="font-size: 10px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-meta);"
+      >
+        PASQUALO.TO · 2025–26
+      </p>
+      <h1
+        class="ff-serif"
+        style="font-size: clamp(36px, 4vw, 48px); font-weight: 300; letter-spacing: -0.015em; line-height: 1.05; color: var(--color-ink);"
+      >
+        Quietly,<br /><em style="font-style: italic; font-weight: 300; color: var(--color-ink-muted);">between takes.</em>
+      </h1>
+      <p
+        class="mt-5 max-w-xs ff-serif"
+        style="font-size: 15px; font-weight: 300; line-height: 1.65; color: var(--color-ink-muted);"
+      >
+        A small archive of photographs made in Porto Alegre
+        and elsewhere, mostly between other things.
+      </p>
+    </div>
+
+    <!-- Right: featured cover photo -->
+    {featuredCoverSrc && (
+      <a
+        href={featuredHref ?? '/'}
+        class="hidden md:block md:w-[45%] shrink-0"
+        style="text-decoration: none;"
+      >
+        <div class="w-full h-full" style="aspect-ratio: 4/5; min-height: 100%;">
+          <img
+            src={featuredCoverSrc}
+            alt=""
+            aria-hidden="true"
+            class="w-full h-full object-cover"
+            loading="eager"
+          />
+        </div>
+      </a>
+    )}
+  </div>
 </section>
