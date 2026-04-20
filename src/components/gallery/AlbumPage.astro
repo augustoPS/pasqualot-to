@@ -103,6 +103,7 @@ function fullUrl(file: string) {
   <!-- Password gate — shown when protected and locked photos remain -->
   {isProtected && lockedCount > 0 && (
     <div
+      id="password-gate"
       class="py-16 flex flex-col items-center text-center border-t border-b mb-14"
       style="border-color: var(--color-line);"
     >
