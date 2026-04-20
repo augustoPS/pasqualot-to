@@ -1,259 +1,236 @@
-// Gallery page script — CSP-safe (no inline handlers), loaded via <script src defer>.
-// Reads photo data from .gallery-photo buttons in #photo-grid.
-// Opens lightbox on click; handles keyboard, swipe, and password gate.
-
 (function () {
-  const cfg = document.getElementById('album-config');
-  if (!cfg) return; // not an album page
+  'use strict';
 
-  const isProtected = cfg.dataset.isProtected === 'true';
-  const albumId = cfg.dataset.albumId;
+  // ─── State ────────────────────────────────────────────────────────────────
+  let photos = [];
+  let currentIndex = 0;
+  let thumbRects = new Map();
+  let isOpen = false;
 
-  // ── Photo list ────────────────────────────────────────────────────────────
-  // Built from .gallery-photo buttons already in the DOM.
-  // After unlock, locked photos are appended and this list is extended.
-  let allPhotos = [];
+  // ─── Elements ─────────────────────────────────────────────────────────────
+  const lightbox = document.getElementById('lightbox');
+  const img = document.getElementById('lightbox-img');
+  const closeBtn = document.getElementById('lightbox-close');
+  const prevBtn = document.getElementById('lightbox-prev');
+  const nextBtn = document.getElementById('lightbox-next');
+  const frameMeta = document.getElementById('lightbox-frame');
+  const lensMeta = document.getElementById('lightbox-lens');
 
-  function collectPhotos() {
-    allPhotos = [];
-    document.querySelectorAll('#photo-grid .gallery-photo').forEach((btn, i) => {
-      allPhotos.push({
-        src: btn.dataset.src,
-        alt: btn.dataset.alt,
-      });
-      btn.dataset.index = String(i);
-    });
+  if (!lightbox || !img) return;
+
+  // ─── Build photo list from DOM ────────────────────────────────────────────
+  function buildPhotoList() {
+    photos = Array.from(document.querySelectorAll('.gallery-photo')).map((btn, i) => ({
+      src: btn.dataset.src,
+      alt: btn.dataset.alt || '',
+      lens: btn.dataset.lens || '',
+      caption: btn.dataset.caption || '',
+      index: i,
+      btn,
+    }));
   }
 
-  collectPhotos();
+  // ─── FLIP open ────────────────────────────────────────────────────────────
+  function open(index) {
+    if (!photos[index]) return;
+    currentIndex = index;
+    const photo = photos[index];
 
-  // ── Lightbox ──────────────────────────────────────────────────────────────
-  const lightbox        = document.getElementById('lightbox');
-  const lightboxImg     = document.getElementById('lightbox-img');
-  const lightboxLoader  = document.getElementById('lightbox-loader');
-  const lightboxCounter = document.getElementById('lightbox-counter');
-  const lightboxClose   = document.getElementById('lightbox-close');
-  const lightboxPrevBtn = document.getElementById('lightbox-prev');
-  const lightboxNextBtn = document.getElementById('lightbox-next');
+    const thumbRect = photo.btn.getBoundingClientRect();
+    thumbRects.set(index, thumbRect);
 
-  let activeIndex = 0;
-  let lightboxOpener = null;
+    img.src = photo.src;
+    img.alt = photo.alt;
+    img.style.opacity = '0';
+    img.style.transform = 'none';
+    img.style.transition = 'none';
 
-  function setLightboxImage(index) {
-    activeIndex = index;
-    const photo = allPhotos[index];
-    lightboxImg.classList.add('opacity-0');
-    lightboxLoader.classList.remove('hidden');
-    lightboxImg.onload = () => {
-      lightboxImg.classList.remove('opacity-0');
-      lightboxLoader.classList.add('hidden');
-    };
-    lightboxImg.src = photo.src;
-    lightboxImg.alt = photo.alt;
-    lightboxCounter.textContent = `${index + 1} / ${allPhotos.length}`;
-    schedulePreload(index);
-  }
-
-  function openLightbox(index) {
-    lightboxOpener = document.activeElement;
-    activeIndex = index;
     lightbox.classList.remove('hidden');
-    lightbox.classList.add('flex');
-    document.body.style.overflow = 'hidden';
-    setLightboxImage(index);
-    lightboxClose.focus();
-  }
+    lightbox.style.display = 'flex';
+    lightbox.style.alignItems = 'center';
+    lightbox.style.justifyContent = 'center';
+    isOpen = true;
 
-  function closeLightbox() {
-    lightbox.classList.add('hidden');
-    lightbox.classList.remove('flex');
-    document.body.style.overflow = '';
-    if (lightboxOpener && document.contains(lightboxOpener)) { lightboxOpener.focus(); }
-    lightboxOpener = null;
-  }
+    updateMeta();
+    updateButtons();
 
-  function prev() { setLightboxImage((activeIndex - 1 + allPhotos.length) % allPhotos.length); }
-  function next() { setLightboxImage((activeIndex + 1) % allPhotos.length); }
+    function doFlip() {
+      const imgRect = img.getBoundingClientRect();
+      if (imgRect.width === 0) {
+        requestAnimationFrame(doFlip);
+        return;
+      }
 
-  lightboxClose.addEventListener('click', closeLightbox);
-  lightboxPrevBtn.addEventListener('click', prev);
-  lightboxNextBtn.addEventListener('click', next);
-  lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
+      const dx = thumbRect.left + thumbRect.width / 2 - (imgRect.left + imgRect.width / 2);
+      const dy = thumbRect.top + thumbRect.height / 2 - (imgRect.top + imgRect.height / 2);
+      const scaleX = thumbRect.width / imgRect.width;
+      const scaleY = thumbRect.height / imgRect.height;
 
-  // Focus trap within lightbox
-  const focusable = [lightboxClose, lightboxPrevBtn, lightboxNextBtn];
-  lightbox.addEventListener('keydown', (e) => {
-    if (e.key !== 'Tab') return;
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    if (e.shiftKey) {
-      if (document.activeElement === first) { e.preventDefault(); last.focus(); }
-    } else {
-      if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+      img.style.transform = `translate(${dx}px, ${dy}px) scale(${scaleX}, ${scaleY})`;
+      img.style.opacity = '0.6';
+
+      img.getBoundingClientRect(); // force reflow
+
+      img.style.transition = 'transform 280ms cubic-bezier(0.4, 0, 0.2, 1), opacity 280ms ease';
+      img.style.transform = 'none';
+      img.style.opacity = '1';
     }
+
+    if (img.complete && img.naturalWidth > 0) {
+      requestAnimationFrame(doFlip);
+    } else {
+      img.onload = () => requestAnimationFrame(doFlip);
+    }
+  }
+
+  // ─── FLIP close ───────────────────────────────────────────────────────────
+  function close() {
+    if (!isOpen) return;
+    const photo = photos[currentIndex];
+    const thumbRect = thumbRects.get(currentIndex) || photo?.btn.getBoundingClientRect();
+
+    if (thumbRect && img && img.naturalWidth > 0) {
+      const imgRect = img.getBoundingClientRect();
+      const dx = thumbRect.left + thumbRect.width / 2 - (imgRect.left + imgRect.width / 2);
+      const dy = thumbRect.top + thumbRect.height / 2 - (imgRect.top + imgRect.height / 2);
+      const scaleX = thumbRect.width / imgRect.width;
+      const scaleY = thumbRect.height / imgRect.height;
+
+      img.style.transition = 'transform 220ms cubic-bezier(0.4, 0, 0.2, 1), opacity 180ms ease';
+      img.style.transform = `translate(${dx}px, ${dy}px) scale(${scaleX}, ${scaleY})`;
+      img.style.opacity = '0';
+
+      img.addEventListener('transitionend', hideAfterClose, { once: true });
+    } else {
+      hideAfterClose();
+    }
+  }
+
+  function hideAfterClose() {
+    lightbox.classList.add('hidden');
+    lightbox.style.display = '';
+    img.style.transform = 'none';
+    img.style.opacity = '1';
+    img.style.transition = 'none';
+    isOpen = false;
+  }
+
+  // ─── Navigate ─────────────────────────────────────────────────────────────
+  function navigate(direction) {
+    const newIndex = currentIndex + direction;
+    if (newIndex < 0 || newIndex >= photos.length) return;
+
+    currentIndex = newIndex;
+    const photo = photos[currentIndex];
+
+    img.style.transition = 'opacity 150ms ease';
+    img.style.opacity = '0';
+
+    setTimeout(() => {
+      img.src = photo.src;
+      img.alt = photo.alt;
+      img.style.opacity = '1';
+    }, 150);
+
+    updateMeta();
+    updateButtons();
+  }
+
+  function updateMeta() {
+    const photo = photos[currentIndex];
+    if (!photo) return;
+    if (frameMeta) frameMeta.textContent = String(currentIndex + 1).padStart(3, '0') + ' · ' + photos.length;
+    if (lensMeta) lensMeta.textContent = photo.lens || '';
+  }
+
+  function updateButtons() {
+    if (prevBtn) prevBtn.style.opacity = currentIndex > 0 ? '1' : '0.2';
+    if (nextBtn) nextBtn.style.opacity = currentIndex < photos.length - 1 ? '1' : '0.2';
+  }
+
+  // ─── Event listeners ──────────────────────────────────────────────────────
+  closeBtn?.addEventListener('click', close);
+  prevBtn?.addEventListener('click', () => navigate(-1));
+  nextBtn?.addEventListener('click', () => navigate(1));
+
+  lightbox.addEventListener('click', (e) => {
+    if (e.target === lightbox) close();
   });
 
-  // Keyboard nav
   document.addEventListener('keydown', (e) => {
-    if (lightbox.classList.contains('hidden')) return;
-    if (e.key === 'Escape') closeLightbox();
-    else if (e.key === 'ArrowLeft') prev();
-    else if (e.key === 'ArrowRight') next();
+    if (!isOpen) return;
+    if (e.key === 'Escape') close();
+    if (e.key === 'ArrowLeft') navigate(-1);
+    if (e.key === 'ArrowRight') navigate(1);
   });
 
-  // Swipe
-  let swipeStartX = null;
-  lightbox.addEventListener('touchstart', (e) => { swipeStartX = e.touches[0].clientX; }, { passive: true });
+  // Touch/swipe for mobile
+  let touchStartX = 0;
+  let touchStartY = 0;
+  lightbox.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
   lightbox.addEventListener('touchend', (e) => {
-    if (swipeStartX === null) return;
-    const delta = e.changedTouches[0].clientX - swipeStartX;
-    swipeStartX = null;
-    if (Math.abs(delta) < 50) return;
-    if (delta < 0) next(); else prev();
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+      navigate(dx < 0 ? 1 : -1);
+    } else if (dy > 80 && Math.abs(dy) > Math.abs(dx)) {
+      close();
+    }
   }, { passive: true });
 
-  // ── Click-to-open on masonry grid ─────────────────────────────────────────
-  function bindGridPhoto(btn) {
-    btn.addEventListener('click', () => openLightbox(Number(btn.dataset.index)));
+  // ─── Wire photo buttons ───────────────────────────────────────────────────
+  function wirePhotos() {
+    document.querySelectorAll('.gallery-photo').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        buildPhotoList();
+        const idx = parseInt(btn.dataset.index || '0', 10);
+        open(idx);
+      });
+    });
   }
 
-  document.querySelectorAll('#photo-grid .gallery-photo').forEach(bindGridPhoto);
+  // ─── Password gate ────────────────────────────────────────────────────────
+  const passwordForm = document.getElementById('password-form');
+  const passwordInput = document.getElementById('password-input');
+  const unlockBtn = document.getElementById('unlock-btn');
+  const passwordError = document.getElementById('password-error');
+  const albumConfig = document.getElementById('album-config');
 
-  // ── Proximity preloader ───────────────────────────────────────────────────
-  const preloaded = new Set();
-  let preloadQueue = [];
-  let preloadActive = 0;
-  const CONCURRENCY = 2;
-  const WINDOW = 3;
+  if (passwordForm && albumConfig) {
+    const albumId = albumConfig.dataset.albumId || '';
 
-  function runPreloadQueue() {
-    while (preloadActive < CONCURRENCY && preloadQueue.length > 0) {
-      const src = preloadQueue.shift();
-      if (preloaded.has(src)) continue;
-      preloaded.add(src);
-      preloadActive++;
-      const img = new Image();
-      img.onload = img.onerror = () => { preloadActive--; runPreloadQueue(); };
-      img.src = src;
-    }
-  }
+    passwordForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const password = passwordInput?.value || '';
+      if (!password) return;
 
-  function schedulePreload(centerIdx) {
-    preloadQueue = [];
-    for (let d = 1; d <= WINDOW; d++) {
-      for (const idx of [centerIdx + d, centerIdx - d]) {
-        const photo = allPhotos[idx];
-        if (photo && !preloaded.has(photo.src)) preloadQueue.push(photo.src);
+      unlockBtn?.setAttribute('disabled', 'true');
+      passwordError?.classList.add('hidden');
+
+      try {
+        const res = await fetch('/api/auth/album', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ albumId, password }),
+        });
+
+        if (res.ok) {
+          window.location.reload();
+        } else {
+          passwordError?.classList.remove('hidden');
+          unlockBtn?.removeAttribute('disabled');
+        }
+      } catch {
+        passwordError?.classList.remove('hidden');
+        unlockBtn?.removeAttribute('disabled');
       }
-    }
-    runPreloadQueue();
-  }
-
-  // ── Password gate ─────────────────────────────────────────────────────────
-  if (!isProtected) return;
-
-  const storageKey = `unlocked:${albumId}`;
-  const lockedSection = document.getElementById('locked-section');
-  const gate = document.getElementById('password-gate');
-
-  const alreadyUnlocked = sessionStorage.getItem(storageKey) === 'true';
-
-  async function fetchLockedPhotos() {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10000);
-    let res;
-    try {
-      res = await fetch(`/api/albums/${albumId}/photos`, { signal: controller.signal });
-    } catch {
-      return 'network';
-    } finally {
-      clearTimeout(timeout);
-    }
-    if (res.status === 401 || res.status === 403) return 'expired';
-    if (!res.ok) return 'error';
-    return res.json();
-  }
-
-  function appendLockedPhotos(photos) {
-    const grid = document.getElementById('photo-grid');
-    const startIndex = allPhotos.length;
-    photos.forEach((p, i) => {
-      const btn = document.createElement('button');
-      btn.className = 'gallery-photo block w-full p-0 border-0 bg-transparent mb-[5px] break-inside-avoid cursor-zoom-in';
-      btn.dataset.src = p.src;
-      btn.dataset.alt = p.alt;
-      btn.dataset.index = String(startIndex + i);
-      btn.setAttribute('aria-label', `View ${p.alt}`);
-      const img = document.createElement('img');
-      img.src = p.thumbSrc;
-      img.alt = p.alt;
-      img.className = 'w-full h-auto block';
-      img.loading = 'lazy';
-      btn.appendChild(img);
-      bindGridPhoto(btn);
-      grid.appendChild(btn);
     });
-    // Rebuild allPhotos from DOM so indices stay correct
-    collectPhotos();
   }
 
-  function showGateError(msg) {
-    if (gate) {
-      gate.style.display = 'flex';
-      if (lockedSection) lockedSection.style.display = 'block';
-    }
-    const btn = document.getElementById('unlock-btn');
-    if (btn) { btn.disabled = false; btn.textContent = 'Unlock'; }
-    const err = document.getElementById('password-error');
-    if (err) { err.textContent = msg; err.classList.remove('hidden'); }
-  }
-
-  async function unlock(fromSessionStorage = false) {
-    const result = await fetchLockedPhotos();
-    if (typeof result !== 'object' || !result.photos) {
-      if (fromSessionStorage) sessionStorage.removeItem(storageKey);
-      const msg = result === 'expired'
-        ? 'Your session has expired. Please enter the password again.'
-        : 'Something went wrong. Please try again.';
-      showGateError(msg);
-      return;
-    }
-    // Remove locked section (blurred placeholders + gate)
-    if (lockedSection) {
-      lockedSection.style.opacity = '0';
-      lockedSection.style.transition = 'opacity 200ms';
-      setTimeout(() => lockedSection.remove(), 200);
-    }
-    appendLockedPhotos(result.photos);
-  }
-
-  if (alreadyUnlocked) {
-    unlock(true);
-  }
-
-  document.getElementById('password-form')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn = document.getElementById('unlock-btn');
-    btn.disabled = true;
-    btn.textContent = 'Unlocking…';
-
-    const passwordInput = document.getElementById('password-input');
-    const res = await fetch('/api/auth/album', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ album: albumId, password: passwordInput.value }),
-    });
-
-    if (res.ok) {
-      sessionStorage.setItem(storageKey, 'true');
-      unlock();
-    } else {
-      btn.disabled = false;
-      btn.textContent = 'Unlock';
-      const err = document.getElementById('password-error');
-      err.classList.remove('hidden');
-      passwordInput.value = '';
-      passwordInput.addEventListener('input', () => err.classList.add('hidden'), { once: true });
-    }
-  });
+  // ─── Init ─────────────────────────────────────────────────────────────────
+  buildPhotoList();
+  wirePhotos();
 })();
