@@ -29,6 +29,9 @@ passkey.pub
 *.pem
 id_*
 
+# git worktrees
+.worktrees/
+
 # jetbrains setting folder
 .idea/
 
