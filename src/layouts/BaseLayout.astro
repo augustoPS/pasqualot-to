@@ -44,10 +44,20 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin)
       @font-face { font-family: 'Inter'; font-style: normal; font-weight: 400; font-display: swap; src: url('/fonts/inter-400.woff2') format('woff2'); }
       @font-face { font-family: 'Inter'; font-style: normal; font-weight: 500; font-display: swap; src: url('/fonts/inter-500.woff2') format('woff2'); }
       :root {
-        --font-serif:   'Fraunces', Georgia, serif;
-        --font-display: 'Space Grotesk', 'Helvetica Neue', Helvetica, sans-serif;
-        --font-sans:    'Inter', ui-sans-serif, system-ui, sans-serif;
-        --font-mono:    'IBM Plex Mono', ui-monospace, monospace;
+        --color-bg:        #0a0a0a;
+        --color-surface:   #141414;
+        --color-surface-2: #1d1d1d;
+        --color-ink:       #e8e6e1;
+        --color-ink-muted: #b6b2a8;
+        --color-meta:      #8a877e;
+        --color-dim:       #5a574f;
+        --color-line:      #242424;
+        --color-line-2:    #2a2a2a;
+        --color-accent:    #c9a96e;
+        --font-serif:      'Fraunces', Georgia, serif;
+        --font-display:    'Space Grotesk', 'Helvetica Neue', Helvetica, sans-serif;
+        --font-sans:       'Inter', ui-sans-serif, system-ui, sans-serif;
+        --font-mono:       'IBM Plex Mono', ui-monospace, monospace;
       }
     </style>
     <!-- Open Graph -->
