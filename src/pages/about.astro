@@ -9,27 +9,21 @@ const aboutPhotoSrc = `https://photos.pasqualo.to/about/${orientation}.jpg`;
 <BaseLayout title="About" breadcrumbs={[{ label: 'About' }]}>
   <section
     class={isLandscape
-      ? 'flex flex-col min-h-[calc(100vh-64px)]'
+      ? 'grid grid-cols-1 md:grid-cols-[2fr_1fr] min-h-[calc(100vh-64px)]'
       : 'grid grid-cols-1 md:grid-cols-[1fr_1.1fr] min-h-[calc(100vh-64px)]'}
   >
 
     <!-- Photo -->
-    {isLandscape ? (
+    <div
+      class="relative overflow-hidden"
+      style={isLandscape ? 'min-height: 60vw;' : 'aspect-ratio: 4/5; min-height: 300px;'}
+    >
       <img
         src={aboutPhotoSrc}
         alt="Augusto Pasqualoto"
-        class="w-full block object-cover object-center"
-        style="aspect-ratio: 3/2; max-height: 55vh;"
+        class={`absolute inset-0 w-full h-full object-cover ${isLandscape ? 'object-center' : 'object-top'}`}
       />
-    ) : (
-      <div class="relative overflow-hidden" style="aspect-ratio: 4/5; min-height: 300px;">
-        <img
-          src={aboutPhotoSrc}
-          alt="Augusto Pasqualoto"
-          class="absolute inset-0 w-full h-full object-cover object-top"
-        />
-      </div>
-    )}
+    </div>
 
     <!-- Text column -->
     <div
