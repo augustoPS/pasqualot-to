@@ -69,35 +69,49 @@ const meta = location ? `${location} · ${year}` : String(year);
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3" style="gap: 20px;">
       {children.map((child, i) => (
         <a href={child.href} class="group block" style="text-decoration: none;">
-          <div class="relative overflow-hidden" style="aspect-ratio: 4/5;">
+          <div
+            class="relative overflow-hidden"
+            style="aspect-ratio: 4/5;"
+          >
             <img
               src={child.coverSrc}
               alt={child.title}
               class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
               loading="lazy"
             />
+
+            {/* Index overlay - top left */}
+            <div
+              class="absolute top-0 left-0 p-3 ff-mono"
+              style="font-size: 10px; letter-spacing: 0.14em; color: var(--color-dim); text-shadow: 0 1px 3px rgba(0,0,0,0.5);"
+            >
+              {String(i + 1).padStart(2, '0')}
+            </div>
+
+            {/* Title and meta overlay - bottom */}
+            <div
+              class="absolute bottom-0 left-0 right-0 ff-serif"
+              style="background: linear-gradient(to top, rgba(10,10,10,1) 0%, rgba(10,10,10,0.85) 60%, transparent 100%); padding: 2rem 1rem 1rem 1rem;"
+            >
+              <h2
+                class="group-hover:text-[var(--color-accent)] transition-colors"
+                style="font-size: 22px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.2; color: var(--color-ink); margin: 0;"
+              >{child.title}</h2>
+              <p
+                class="mt-2 ff-mono"
+                style="font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-meta); margin: 0;"
+              >{child.meta}</p>
+            </div>
+
+            {/* Protected badge - bottom right */}
             {child.protected && (
               <div
-                class="absolute bottom-0 left-0 px-2 py-1 ff-mono"
+                class="absolute bottom-4 right-4 px-2 py-1 ff-mono"
                 style="background: rgba(0,0,0,0.6); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-meta);"
               >
                 PROTECTED
               </div>
             )}
-          </div>
-          <div class="mt-3">
-            <span
-              class="block mb-1 ff-mono"
-              style="font-size: 10px; letter-spacing: 0.14em; color: var(--color-dim);"
-            >{String(i + 1).padStart(2, '0')}</span>
-            <h2
-              class="group-hover:text-[var(--color-accent)] transition-colors ff-serif"
-              style="font-size: 22px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; color: var(--color-ink);"
-            >{child.title}</h2>
-            <p
-              class="mt-1 ff-mono"
-              style="font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-meta);"
-            >{child.meta}</p>
           </div>
         </a>
       ))}

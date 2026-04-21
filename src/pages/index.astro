@@ -52,10 +52,7 @@ const featured = cards[0];
 ---
 
 <BaseLayout>
-  <HomeHero
-    featuredCoverSrc={featured?.coverSrc}
-    featuredHref={featured?.href}
-  />
+  <HomeHero />
 
   <!-- Mobile CTA -->
   <div class="md:hidden px-6 pb-10 pt-2">
@@ -74,14 +71,9 @@ const featured = cards[0];
     {cards.length === 0 ? (
       <p class="ff-serif" style="color: var(--color-meta); font-size: 14px;">No series yet.</p>
     ) : (
-      <div class="flex flex-col md:grid md:grid-cols-2 max-w-[1200px] mx-auto" style="gap: 20px;">
-        {cards.map((card, i) => (
-          <div
-            class="md:contents"
-            style={`width: 80%; ${i % 2 === 0 ? 'margin-left: 20%;' : 'margin-right: 20%;'}`}
-          >
-            <SeriesCard {...card} />
-          </div>
+      <div class="flex flex-col md:grid md:grid-cols-3 max-w-[1200px] mx-auto" style="gap: 24px;">
+        {cards.map((card) => (
+          <SeriesCard {...card} />
         ))}
       </div>
     )}
