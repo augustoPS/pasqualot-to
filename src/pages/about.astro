@@ -21,6 +21,7 @@ const aboutPhotoSrc = `https://photos.pasqualo.to/about/${orientation}.jpg`;
       <img
         src={aboutPhotoSrc}
         alt="Augusto Pasqualoto"
+        style={isLandscape ? 'clip-path: inset(0 10%);' : ''}
         class={`absolute inset-0 w-full h-full object-cover ${isLandscape ? 'object-center' : 'object-top'}`}
       />
     </div>
