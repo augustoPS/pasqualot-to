@@ -14,16 +14,22 @@ const aboutPhotoSrc = `https://photos.pasqualo.to/about/${orientation}.jpg`;
   >
 
     <!-- Photo -->
-    <div
-      class="relative overflow-hidden"
-      style={isLandscape ? 'width: 100%; aspect-ratio: 3/2; max-height: 55vh;' : 'aspect-ratio: 4/5; min-height: 300px;'}
-    >
+    {isLandscape ? (
       <img
         src={aboutPhotoSrc}
         alt="Augusto Pasqualoto"
-        class={`absolute inset-0 w-full h-full object-cover ${isLandscape ? 'object-center' : 'object-top'}`}
+        class="w-full block object-cover object-center"
+        style="aspect-ratio: 3/2; max-height: 55vh;"
       />
-    </div>
+    ) : (
+      <div class="relative overflow-hidden" style="aspect-ratio: 4/5; min-height: 300px;">
+        <img
+          src={aboutPhotoSrc}
+          alt="Augusto Pasqualoto"
+          class="absolute inset-0 w-full h-full object-cover object-top"
+        />
+      </div>
+    )}
 
     <!-- Text column -->
     <div
