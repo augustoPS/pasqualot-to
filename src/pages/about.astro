@@ -21,14 +21,14 @@ const aboutPhotoSrc = `https://photos.pasqualo.to/about/${orientation}.jpg`;
       <img
         src={aboutPhotoSrc}
         alt="Augusto Pasqualoto"
-        style={isLandscape ? 'clip-path: inset(0 10%);' : ''}
+        style={isLandscape ? 'clip-path: inset(0 10%); transform: scaleX(1.125);' : ''}
         class={`absolute inset-0 w-full h-full object-cover ${isLandscape ? 'object-center' : 'object-top'}`}
       />
     </div>
 
     <!-- Text column -->
     <div
-      class="flex flex-col h-full px-10 md:px-16 py-6 md:py-8"
+      class="flex flex-col px-10 md:px-16 py-6 md:py-8"
       style="max-width: 600px;"
     >
       <p
@@ -58,7 +58,7 @@ const aboutPhotoSrc = `https://photos.pasqualo.to/about/${orientation}.jpg`;
         </p>
       </div>
 
-      <div class="mt-auto pt-3 border-t" style="border-color: var(--color-line-2);">
+      <div class="mt-6 pt-3 border-t" style="border-color: var(--color-line-2);">
         <div class="ff-mono" style="display: grid; grid-template-columns: auto 1fr; gap: 2px 16px; font-size: 9px; letter-spacing: 0.12em;">
           <span style="text-transform: uppercase; color: var(--color-dim);">Email</span>
           <span style="color: var(--color-meta);">
