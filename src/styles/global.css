@@ -1,6 +1,19 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+:root {
+  --color-bg:        #0a0a0a;
+  --color-surface:   #141414;
+  --color-surface-2: #1d1d1d;
+  --color-ink:       #e8e6e1;
+  --color-ink-muted: #b6b2a8;
+  --color-meta:      #8a877e;
+  --color-dim:       #5a574f;
+  --color-line:      #242424;
+  --color-line-2:    #2a2a2a;
+  --color-accent:    #c9a96e;
+}
+
 @theme {
   /* Backgrounds */
   --color-bg:        #0a0a0a;
