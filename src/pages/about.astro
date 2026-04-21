@@ -15,8 +15,8 @@ const aboutPhotoSrc = `https://photos.pasqualo.to/about/${orientation}.jpg`;
 
     <!-- Photo -->
     <div
-      class="relative overflow-hidden"
-      style={isLandscape ? 'min-height: 60vw;' : 'aspect-ratio: 4/5; min-height: 300px;'}
+      class="relative overflow-hidden max-h-full"
+      style={isLandscape ? 'aspect-ratio: 16/9;' : 'aspect-ratio: 4/5; min-height: 300px;'}
     >
       <img
         src={aboutPhotoSrc}
