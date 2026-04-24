@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-04-24 — about-hero-layout
+
+Fixed full-viewport layout on the home hero and about page so photos fill the entire viewport without gaps, stretching, or distortion. Added `coverOrientation` schema field to albums so the hero can switch between portrait (45% column) and landscape (60% column) layouts. Key discoveries: the root cause of the about page gap was `clip-path: inset(0 10%)` applied when `isLandscape=true` — it was cropping the image visually even though the container was correct. About page now uses `position: fixed; top: var(--nav-h); left: 0; right: 0; bottom: 0;` on the section, and `--nav-h` is set at runtime by an inline script in Nav.astro measuring actual `header.offsetHeight`. Text column pinned to bottom with `justify-end`.
+
+### Added
+- feat: fix full-viewport hero/about layout and add landscape orientation support (2b698cb)
+
 ## 2026-04-21 — about-page-layout
 
 Debugged and refined the about page layout to display full-screen without scrolling. Fixed issues with content visibility, photo sizing, and blank space through iterative visual testing. Made the landscape photo display at 16/9 aspect ratio with a 10% side crop to focus on the central subject. Repositioned contact info directly below about text using mt-6 spacing. Applied grid `items-start` alignment to eliminate unwanted vertical stretching and blank space. User edited about page content with updated contact details (email, Instagram handles, built-with credits).
