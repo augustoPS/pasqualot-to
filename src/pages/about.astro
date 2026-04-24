@@ -9,26 +9,27 @@ const aboutPhotoSrc = `https://photos.pasqualo.to/about/${orientation}.jpg`;
 <BaseLayout title="About" breadcrumbs={[{ label: 'About' }]}>
   <section
     class={isLandscape
-      ? 'grid grid-cols-1 md:grid-cols-[2fr_1fr] items-start'
-      : 'grid grid-cols-1 md:grid-cols-[1fr_1.1fr] items-start'}
+      ? 'grid grid-cols-1 md:grid-cols-[2fr_1fr]'
+      : 'grid grid-cols-1 md:grid-cols-[1fr_1.1fr]'}
+    style="position: fixed; top: var(--nav-h); left: 0; right: 0; bottom: 0;"
   >
 
     <!-- Photo -->
     <div
-      class="relative overflow-hidden max-h-full"
-      style={isLandscape ? 'aspect-ratio: 16/9;' : 'aspect-ratio: 4/5; min-height: 300px;'}
+      class={isLandscape
+        ? 'relative overflow-hidden aspect-video md:aspect-auto'
+        : 'relative overflow-hidden aspect-[4/5] md:aspect-auto min-h-[300px] md:min-h-0'}
     >
       <img
         src={aboutPhotoSrc}
         alt="Augusto Pasqualoto"
-        style={isLandscape ? 'clip-path: inset(0 10%);' : ''}
-        class={`absolute inset-0 w-full h-full object-cover ${isLandscape ? 'object-center' : 'object-top'}`}
+        class="absolute inset-0 w-full h-full object-cover object-center"
       />
     </div>
 
     <!-- Text column -->
     <div
-      class="flex flex-col px-10 md:px-16 py-6 md:py-8"
+      class="flex flex-col justify-end px-10 md:px-16 py-6 md:py-8"
       style="max-width: 600px;"
     >
       <p

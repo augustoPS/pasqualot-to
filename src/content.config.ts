@@ -9,6 +9,7 @@ const albums = defineCollection({
     location: z.string().optional(),
     description: z.string().optional(),
     cover: z.string(),
+    coverOrientation: z.enum(['portrait', 'landscape']).default('portrait'),
     photos: z.array(
       z.object({
         file: z.string(),

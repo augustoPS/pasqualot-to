@@ -96,6 +96,12 @@ const hasBreadcrumbs = breadcrumbs.length > 0;
 
   </div>
 </header>
+<script is:inline>
+  (function () {
+    var h = document.querySelector('header');
+    if (h) document.documentElement.style.setProperty('--nav-h', h.offsetHeight + 'px');
+  })();
+</script>
 
 <!-- Mobile drawer (full-screen overlay) -->
 <div

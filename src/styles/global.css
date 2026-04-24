@@ -33,6 +33,10 @@
 .ff-mono    { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
 .ff-sans    { font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; }
 
+:root {
+  --nav-h: 62px; /* py-5 (40px) + Space Grotesk 15px line (22px) + 1px border */
+}
+
 html {
   background-color: var(--color-bg);
   color: var(--color-ink);
