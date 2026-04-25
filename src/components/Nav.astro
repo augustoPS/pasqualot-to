@@ -1,5 +1,5 @@
 ---
-import { SITE_NAME, SHOW_NOTES } from '../config';
+import { SHOW_NOTES } from '../config';
 
 interface Crumb {
   label: string;
@@ -37,34 +37,41 @@ const hasBreadcrumbs = breadcrumbs.length > 0;
   <div class="flex items-center justify-between px-6 md:px-10 py-5">
 
     <!-- Logo with optional inline breadcrumb path (breadcrumbs hidden below sm) -->
-    <a
-      href="/"
-      class="ff-display"
-      style="font-size: 15px; font-weight: 500; letter-spacing: -0.02em; color: var(--color-ink); text-decoration: none;"
-    >
-      {SITE_NAME}
+    <div class="flex items-center">
+      <a href="/" class="logo" aria-label="pasqualo.to home">
+        <span class="logo-mark" aria-hidden="true">
+          <svg class="bracket bracket--tl" width="10" height="10" viewBox="0 0 14 14" fill="none">
+            <path d="M 1 5 L 1 1 L 5 1" stroke="currentColor" stroke-width="1.4" stroke-linecap="square"/>
+          </svg>
+          <span class="wordmark">
+            <span class="wordmark__name">pasqualo</span><span class="wordmark__tld">.to</span>
+          </span>
+          <svg class="bracket bracket--br" width="10" height="10" viewBox="0 0 14 14" fill="none">
+            <path d="M 13 9 L 13 13 L 9 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="square"/>
+          </svg>
+        </span>
+      </a>
       {hasBreadcrumbs && breadcrumbs.map((crumb, i) => {
         const isLast = i === breadcrumbs.length - 1;
         return (
           <>
             <span
-              class="hidden sm:inline"
-              style="color: var(--color-dim); font-weight: 300; margin: 0 6px;"
+              class="hidden sm:inline ff-display"
+              style="color: var(--color-dim); font-weight: 300; margin: 0 6px; font-size: 15px;"
             >/</span>
             {isLast ? (
-              <span class="hidden sm:inline">{crumb.label.toLowerCase()}</span>
+              <span class="hidden sm:inline ff-display" style="font-size: 15px; font-weight: 500; letter-spacing: -0.02em; color: var(--color-ink);">{crumb.label.toLowerCase()}</span>
             ) : (
               <a
                 href={crumb.href}
-                class="hidden sm:inline"
-                style="color: var(--color-meta); font-weight: 400; text-decoration: none;"
-                onclick="event.stopPropagation()"
+                class="hidden sm:inline ff-display"
+                style="font-size: 15px; font-weight: 400; letter-spacing: -0.02em; color: var(--color-meta); text-decoration: none;"
               >{crumb.label.toLowerCase()}</a>
             )}
           </>
         );
       })}
-    </a>
+    </div>
 
     <!-- Desktop nav links (hidden on mobile) -->
     <nav class="hidden sm:flex items-center gap-5 md:gap-6">
@@ -114,11 +121,19 @@ const hasBreadcrumbs = breadcrumbs.length > 0;
 >
   <!-- Drawer header: logo + close button -->
   <div class="flex items-center justify-between mb-16">
-    <a
-      href="/"
-      class="ff-display"
-      style="font-size: 15px; font-weight: 500; letter-spacing: -0.02em; color: var(--color-ink); text-decoration: none;"
-    >{SITE_NAME}</a>
+    <a href="/" class="logo" aria-label="pasqualo.to home">
+      <span class="logo-mark" aria-hidden="true">
+        <svg class="bracket bracket--tl" width="10" height="10" viewBox="0 0 14 14" fill="none">
+          <path d="M 1 5 L 1 1 L 5 1" stroke="currentColor" stroke-width="1.4" stroke-linecap="square"/>
+        </svg>
+        <span class="wordmark">
+          <span class="wordmark__name">pasqualo</span><span class="wordmark__tld">.to</span>
+        </span>
+        <svg class="bracket bracket--br" width="10" height="10" viewBox="0 0 14 14" fill="none">
+          <path d="M 13 9 L 13 13 L 9 13" stroke="currentColor" stroke-width="1.4" stroke-linecap="square"/>
+        </svg>
+      </span>
+    </a>
     <button
       id="nav-drawer-close"
       class="flex items-center justify-center w-8 h-8 bg-transparent border-0 cursor-pointer ff-display"
@@ -169,3 +184,46 @@ const hasBreadcrumbs = breadcrumbs.length > 0;
     if (e.key === 'Escape' && hamburger?.getAttribute('aria-expanded') === 'true') closeDrawer();
   });
 </script>
+
+<style>
+  .logo {
+    display: inline-flex;
+    text-decoration: none;
+    color: var(--color-ink);
+  }
+  .logo-mark {
+    display: inline-grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: stretch;
+    column-gap: 8px;
+    padding: 4px 2px;
+  }
+  .bracket {
+    color: var(--color-ink);
+    align-self: stretch;
+    height: auto;
+  }
+  .bracket--tl { align-self: start; }
+  .bracket--br { align-self: end; }
+  .wordmark {
+    display: inline-flex;
+    align-items: baseline;
+    line-height: 1;
+  }
+  .wordmark__name {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-weight: 500;
+    font-size: 15px;
+    letter-spacing: -0.02em;
+    color: var(--color-ink);
+  }
+  .wordmark__tld {
+    font-family: 'Fraunces', Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 18px;
+    letter-spacing: -0.04em;
+    color: var(--color-accent);
+    margin-left: 1px;
+  }
+</style>
