@@ -9,16 +9,15 @@ const aboutPhotoSrc = `https://photos.pasqualo.to/about/${orientation}.jpg`;
 <BaseLayout title="About" breadcrumbs={[{ label: 'About' }]}>
   <section
     class={isLandscape
-      ? 'grid grid-cols-1 md:grid-cols-[2fr_1fr]'
-      : 'grid grid-cols-1 md:grid-cols-[1fr_1.1fr]'}
-    style="position: fixed; top: var(--nav-h); left: 0; right: 0; bottom: 0;"
+      ? 'grid grid-cols-1 md:fixed md:top-[var(--nav-h)] md:left-0 md:right-0 md:bottom-0 md:grid-cols-[2fr_1fr]'
+      : 'grid grid-cols-1 md:fixed md:top-[var(--nav-h)] md:left-0 md:right-0 md:bottom-0 md:grid-cols-[1fr_1.1fr]'}
   >
 
     <!-- Photo -->
     <div
       class={isLandscape
-        ? 'relative overflow-hidden aspect-video md:aspect-auto order-2 md:order-1'
-        : 'relative overflow-hidden aspect-[4/5] md:aspect-auto min-h-[300px] md:min-h-0 order-2 md:order-1'}
+        ? 'relative overflow-hidden aspect-video md:aspect-auto'
+        : 'relative overflow-hidden aspect-[4/5] md:aspect-auto'}
     >
       <img
         src={aboutPhotoSrc}
@@ -29,7 +28,7 @@ const aboutPhotoSrc = `https://photos.pasqualo.to/about/${orientation}.jpg`;
 
     <!-- Text column -->
     <div
-      class="flex flex-col justify-end px-10 md:px-16 py-6 md:py-8 order-1 md:order-2"
+      class="flex flex-col justify-end px-10 md:px-16 py-6 md:py-8"
       style="max-width: 600px;"
     >
       <p
