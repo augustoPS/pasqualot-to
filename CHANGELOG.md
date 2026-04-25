@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-04-25 — series-routing-hero-redesign
+
+Major design and routing overhaul of pasqualo.to. Split /gallery into a static home landing page and a /series catalog route. Redesigned the home hero with larger display type (clamp 64–96px), accent color on the italic tagline, ONGOING ARCHIVE sub-label, and 19px body — inspired by the 404 design language. Applied the same typographic approach to the about page. Built a new /series index page with AUGUSTO PASQUALOTTO kicker, The Archive display headline, and SeriesCard redesigned to use image overlays matching CollectionPage. Fixed breadcrumbs to only appear on album/all pages (suppressed on collection pages). Fixed ← ALL SERIES link and a subtle CSS cascade bug where --nav-h on body was overriding the nav script's runtime measurement.
+
+### Added
+- feat: redesign home hero, split gallery to /series, polish 404 (3c427bf)
+- feat: series page header, overlay cards, nav/breadcrumb polish (e0b37e0)
+
 ## 2026-04-24 — about-hero-layout
 
 Fixed full-viewport layout on the home hero and about page so photos fill the entire viewport without gaps, stretching, or distortion. Added `coverOrientation` schema field to albums so the hero can switch between portrait (45% column) and landscape (60% column) layouts. Key discoveries: the root cause of the about page gap was `clip-path: inset(0 10%)` applied when `isLandscape=true` — it was cropping the image visually even though the container was correct. About page now uses `position: fixed; top: var(--nav-h); left: 0; right: 0; bottom: 0;` on the section, and `--nav-h` is set at runtime by an inline script in Nav.astro measuring actual `header.offsetHeight`. Text column pinned to bottom with `justify-end`.
