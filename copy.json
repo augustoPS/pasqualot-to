@@ -1,103 +1,84 @@
 {
   "_note": "Edit any value here, then ask Claude to apply copy.json to the site. _source fields show where each string lives. {placeholders} in strings are dynamic — keep them as-is.",
-
   "pages": {
-
     "home": {
       "_source": "src/components/home/HomeHero.astro",
       "kicker": "ONGOING ARCHIVE",
-      "headline_line1": "Quietly,",
-      "headline_line2": "between takes.",
+      "headline_line1": "「Quietly,",
+      "headline_line2": "between takes.」",
       "body": "A small archive of photographs made in Porto Alegre and elsewhere, mostly between other things."
     },
-
     "about": {
       "_source": "src/pages/about.astro",
       "section_label": "COLOPHON",
       "headline_name": "Augusto",
-      "headline_surname": "Pasqualotto.",
+      "headline_surname": "「Pasqualotto」",
       "bio_1": "Porto Alegre · hobbyist photographer. I shoot what's nearby — cats, circus people, friends running, action figures in afternoon light.",
       "bio_2": "The shop is a side project — I photograph public events and people doing things they love, and let them find themselves afterwards.",
       "bio_3": "Some albums are private. Ask if you know me.",
-      "built_with": "claude code · astro · r2 · "
+      "built_with": "code | design · astro · tailwind · r2 · cloudflare"
     },
-
     "404": {
       "_source": "src/pages/404.astro",
       "kicker": "FRAME NOT FOUND",
-      "body": "The negative you're looking for isn't in the binder. While you're here — a frame from {albumTitle}, {albumDate}.",
+      "body": "The negative you're looking for isn't in the binder. While you're here — a frame from 「{albumTitle}」, {albumDate}.",
       "link_home": "← BACK HOME",
       "link_archive": "SEE THE ARCHIVE"
     },
-
     "series_index": {
       "_source": "src/pages/series/index.astro",
       "kicker": "AUGUSTO PASQUALOTTO",
       "headline_line1": "The",
       "headline_line2": "Archive."
     }
-
   },
-
   "collections": {
-
     "cats": {
       "_source": "src/content/collections/cats.json",
       "title": "Cats",
       "blurb": ""
     },
-
     "circo-hibrido": {
       "_source": "src/content/collections/circo-hibrido.json",
       "title": "Circo Híbrido",
       "blurb": ""
     },
-
     "pb": {
       "_source": "src/content/collections/pb.json",
       "title": "PB",
       "blurb": ""
     }
-
   },
-
   "albums": {
-
     "cats/amarula": {
       "_source": "src/content/albums/cats/amarula.json",
       "title": "Amarula",
       "description": ""
     },
-
     "circo-hibrido/leo": {
       "_source": "src/content/albums/circo-hibrido/leo.json",
       "title": "Leo",
       "description": ""
     },
-
     "circo-hibrido/thiago": {
       "_source": "src/content/albums/circo-hibrido/thiago.json",
       "title": "Thiago",
       "description": ""
     },
-
     "circo-hibrido/vincent": {
       "_source": "src/content/albums/circo-hibrido/vincent.json",
       "title": "Vincent",
       "description": ""
     },
-
     "pb/inca": {
       "_source": "src/content/albums/pb/inca.json",
       "title": "PB - Inca",
       "description": ""
     },
-
     "pb/salvador": {
       "_source": "src/content/albums/pb/salvador.json",
       "title": "PB - Salvador",
       "description": ""
     }
-
   }
 }
