@@ -32,6 +32,10 @@ id_*
 # git worktrees
 .worktrees/
 
+# local working files
+graphify-out/
+raw/
+
 # jetbrains setting folder
 .idea/
 
