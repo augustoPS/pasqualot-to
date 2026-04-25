@@ -1,9 +1,4 @@
 ---
-interface StackThumb {
-  src: string;
-  alt: string;
-}
-
 interface Props {
   index: number;
   title: string;
@@ -11,11 +6,12 @@ interface Props {
   coverSrc: string;
   meta: string;
   albumCount: number;
-  stackThumbs: StackThumb[];
+  stackThumbs: { src: string; alt: string }[];
 }
 
-const { index, title, href, coverSrc, meta, albumCount, stackThumbs } = Astro.props;
+const { index, title, href, coverSrc, meta, albumCount } = Astro.props;
 const indexLabel = String(index).padStart(2, '0');
+const metaLine = albumCount > 1 ? `${meta} · ${albumCount} albums` : meta;
 ---
 
 <a
@@ -23,7 +19,6 @@ const indexLabel = String(index).padStart(2, '0');
   class="group block"
   style="text-decoration: none;"
 >
-  <!-- Cover -->
   <div class="relative overflow-hidden" style="aspect-ratio: 4/5; width: 100%;">
     <img
       src={coverSrc}
@@ -32,32 +27,25 @@ const indexLabel = String(index).padStart(2, '0');
       loading="lazy"
     />
 
-    <!-- Album count overlay - bottom right -->
-    {albumCount > 1 && (
-      <div
-        class="absolute bottom-3 right-3 px-2 py-1 ff-mono"
-        style="background: rgba(0,0,0,0.7); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-meta);"
-      >{albumCount} albums</div>
-    )}
-  </div>
+    <!-- Index overlay - top left -->
+    <div
+      class="absolute top-0 left-0 p-3 ff-mono"
+      style="font-size: 10px; letter-spacing: 0.14em; color: var(--color-dim); text-shadow: 0 1px 3px rgba(0,0,0,0.5);"
+    >{indexLabel}</div>
 
-  <!-- Metadata below cover -->
-  <div class="mt-3" style="padding-right: 1rem;">
-    <div class="flex items-baseline gap-2">
-      <span
-        class="ff-mono"
-        style="font-size: 8px; letter-spacing: 0.14em; color: var(--color-dim); flex-shrink: 0;"
-      >{indexLabel}</span>
-      <h2
-        class="group-hover:text-[var(--color-accent)] transition-colors ff-serif"
-        style="font-size: 22px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; color: var(--color-ink); margin: 0;"
-      >{title}</h2>
-    </div>
-    <p
-      class="mt-2 ff-mono"
-      style="font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-meta); margin: 0;"
+    <!-- Title and meta overlay - bottom -->
+    <div
+      class="absolute bottom-0 left-0 right-0 ff-serif"
+      style="background: linear-gradient(to top, rgba(10,10,10,1) 0%, rgba(10,10,10,0.85) 60%, transparent 100%); padding: 2rem 1rem 1rem 1rem;"
     >
-      {meta}
-    </p>
+      <h2
+        class="group-hover:text-[var(--color-accent)] transition-colors"
+        style="font-size: 22px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.2; color: var(--color-ink); margin: 0;"
+      >{title}</h2>
+      <p
+        class="mt-2 ff-mono"
+        style="font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-meta); margin: 0;"
+      >{metaLine}</p>
+    </div>
   </div>
 </a>

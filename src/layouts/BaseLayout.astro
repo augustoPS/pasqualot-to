@@ -13,9 +13,10 @@ interface Props {
   description?: string;
   ogImage?: string;
   breadcrumbs?: Crumb[];
+  showNav?: boolean;
 }
 
-const { title, description = SITE_DESCRIPTION, ogImage, breadcrumbs } = Astro.props;
+const { title, description = SITE_DESCRIPTION, ogImage, breadcrumbs, showNav = true } = Astro.props;
 const pageTitle = title ? `${title} — ${SITE_NAME}` : SITE_NAME;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin);
 ---
@@ -57,7 +58,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin)
     <title>{pageTitle}</title>
   </head>
   <body style="min-height: 100vh;">
-    <Nav breadcrumbs={breadcrumbs} />
+    {showNav && <Nav breadcrumbs={breadcrumbs} />}
     <main>
       <slot />
     </main>

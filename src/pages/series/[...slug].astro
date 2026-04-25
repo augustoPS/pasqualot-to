@@ -193,7 +193,7 @@ if (type === 'all' && collection) {
 }
 ---
 
-<BaseLayout title={pageTitle} description={pageDescription} ogImage={ogImage} breadcrumbs={breadcrumbs}>
+<BaseLayout title={pageTitle} description={pageDescription} ogImage={ogImage} breadcrumbs={type !== 'collection' ? breadcrumbs : undefined}>
   {type === 'album' && album && (
     <AlbumPage
       album={album}
