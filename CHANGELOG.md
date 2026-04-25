@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-04-25 — nav-wordmark-aria
+
+Short implementation session. Picked up a pre-designed bracketed wordmark (created externally in Claude design) and wired it into Nav.astro — both the sticky header and the mobile drawer. The wordmark uses diagonal SVG corner brackets flanking "pasqualo" (Space Grotesk 500) and ".to" (Fraunces italic, accent gold). Fixed a pre-existing nested `<a>` bug in the breadcrumb path as a side effect. Swapped favicon.ico → favicon.svg and deleted scratch prototype files. Also cleared the remaining ARIA debt: added aria-label to the protected album password input and role="alert" to the error message.
+
+### Added
+- feat: bracketed wordmark in nav, SVG favicon (46066e3)
+
+### Fixed
+- fix: ARIA label on password input, role=alert on error message (f2d5047)
+
 ## 2026-04-25 — series-routing-hero-redesign
 
 Major design and routing overhaul of pasqualo.to. Split /gallery into a static home landing page and a /series catalog route. Redesigned the home hero with larger display type (clamp 64–96px), accent color on the italic tagline, ONGOING ARCHIVE sub-label, and 19px body — inspired by the 404 design language. Applied the same typographic approach to the about page. Built a new /series index page with AUGUSTO PASQUALOTTO kicker, The Archive display headline, and SeriesCard redesigned to use image overlays matching CollectionPage. Fixed breadcrumbs to only appear on album/all pages (suppressed on collection pages). Fixed ← ALL SERIES link and a subtle CSS cascade bug where --nav-h on body was overriding the nav script's runtime measurement.
