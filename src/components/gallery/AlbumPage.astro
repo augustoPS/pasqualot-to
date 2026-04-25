@@ -121,6 +121,7 @@ function fullUrl(file: string) {
           type="password"
           id="password-input"
           placeholder="password"
+          aria-label="Album password"
           class="flex-1 px-4 py-2 text-sm outline-none"
           style="background: var(--color-surface); border: 1px solid var(--color-line-2); color: var(--color-ink); letter-spacing: 0.08em;"
           autocomplete="current-password"
@@ -136,6 +137,7 @@ function fullUrl(file: string) {
       </form>
       <p
         id="password-error"
+        role="alert"
         class="mt-4 hidden ff-mono"
         style="font-size: 10px; letter-spacing: 0.12em; color: #c0392b;"
       >Incorrect password.</p>
