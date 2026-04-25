@@ -21,10 +21,13 @@ if (publicAlbums.length > 0) {
 ---
 
 <BaseLayout title="404" breadcrumbs={[{ label: '404' }]}>
-  <section class="min-h-[calc(100vh-64px)] grid grid-cols-1 md:grid-cols-[1fr_1.05fr]">
+  <section
+    class="grid grid-cols-1 md:grid-cols-[1fr_1.05fr]"
+    style="height: calc(100vh - var(--nav-h));"
+  >
 
-    <!-- Left: random photo -->
-    <div class="relative overflow-hidden" style="aspect-ratio: 4/5; min-height: 320px;">
+    <!-- Left: random photo (hidden on mobile) -->
+    <div class="hidden md:flex relative overflow-hidden">
       {randomPhoto.src && (
         <img
           src={randomPhoto.src}
