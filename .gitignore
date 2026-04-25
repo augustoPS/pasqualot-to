@@ -35,6 +35,7 @@ id_*
 # local working files
 graphify-out/
 raw/
+copy.json
 
 # jetbrains setting folder
 .idea/
