@@ -6,10 +6,11 @@ interface Props {
   coverSrc: string;
   meta: string;
   albumCount: number;
+  hasProtected: boolean;
   stackThumbs: { src: string; alt: string }[];
 }
 
-const { index, title, href, coverSrc, meta, albumCount } = Astro.props;
+const { index, title, href, coverSrc, meta, albumCount, hasProtected } = Astro.props;
 const indexLabel = String(index).padStart(2, '0');
 const metaLine = albumCount > 1 ? `${meta} · ${albumCount} albums` : meta;
 ---
@@ -32,6 +33,14 @@ const metaLine = albumCount > 1 ? `${meta} · ${albumCount} albums` : meta;
       class="absolute top-0 left-0 p-3 ff-mono"
       style="font-size: 10px; letter-spacing: 0.14em; color: var(--color-dim); text-shadow: 0 1px 3px rgba(0,0,0,0.5);"
     >{indexLabel}</div>
+
+    <!-- Protected badge - top right -->
+    {hasProtected && (
+      <div
+        class="absolute top-3 right-3 px-2 py-1 ff-mono"
+        style="background: rgba(0,0,0,0.6); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-meta);"
+      >「SOME PROTECTED」</div>
+    )}
 
     <!-- Title and meta overlay - bottom -->
     <div

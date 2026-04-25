@@ -20,6 +20,7 @@ interface SeriesCardData {
   coverSrc: string;
   meta: string;
   albumCount: number;
+  hasProtected: boolean;
   stackThumbs: { src: string; alt: string }[];
 }
 
@@ -43,6 +44,7 @@ const cards: SeriesCardData[] = series.map((c, i) => {
     coverSrc: cdnUrl(c.id, c.data.cover),
     meta,
     albumCount: childAlbums.length,
+    hasProtected: childAlbums.some((a) => a!.data.protected),
     stackThumbs,
   };
 });
