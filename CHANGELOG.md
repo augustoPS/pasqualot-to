@@ -1,5 +1,27 @@
 # Changelog
 
+## 2026-04-25 — gallery-ui-copy-deploy
+
+Session focused on pasqualo.to UI polish and tooling. Fixed a critical album password auth bug (safeCompare was missing its HMAC key argument, crashing every auth attempt). Overhauled the protected/series badges to use 「」brackets at top-right. Reworked the about, 404, and series pages for consistent viewport-lock layouts with proper mobile behavior. Established a copy.json workflow for external copy editing. Added `npm run deploy` for local build + Vercel prebuilt deploys, and wired up a pre-wrap-up hook to flag pending changes.
+
+### Added
+- feat: 「SOME PROTECTED」badge on series cards with protected albums (9b5c23e)
+
+### Fixed
+- fix: album passwords, protected badge style, about mobile order (507b837)
+- fix: 「」brackets on protected badge, about page mobile scrollable (73b08ad)
+- fix: 404 page viewport-lock, no scroll — matches home/about treatment (b36f417)
+- fix: 404 mobile shows photo band so copy referencing it makes sense (cc481a2)
+- fix: remove whitespace between album title and date on 404 page (a7793ef)
+- fix: 「」brackets outside <em> tags — no italic on brackets (6f1b91c)
+
+### Other
+- chore: add copy.json — editable inventory of all site text (6874a83)
+- content: apply copy.json — 「」brackets on headlines, built-with update (8f77a4a)
+- content: apply copy.json — 404 body trimmed, no date, no period (c14f423)
+- content: apply copy.json — 「」on home line 2 and series Archive (234c5f1)
+- chore: add npm run deploy — local build + vercel deploy --prebuilt (3160e5b)
+
 ## 2026-04-25 — nav-wordmark-aria
 
 Short implementation session. Picked up a pre-designed bracketed wordmark (created externally in Claude design) and wired it into Nav.astro — both the sticky header and the mobile drawer. The wordmark uses diagonal SVG corner brackets flanking "pasqualo" (Space Grotesk 500) and ".to" (Fraunces italic, accent gold). Fixed a pre-existing nested `<a>` bug in the breadcrumb path as a side effect. Swapped favicon.ico → favicon.svg and deleted scratch prototype files. Also cleared the remaining ARIA debt: added aria-label to the protected album password input and role="alert" to the error message.
