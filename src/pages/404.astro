@@ -22,12 +22,12 @@ if (publicAlbums.length > 0) {
 
 <BaseLayout title="404" breadcrumbs={[{ label: '404' }]}>
   <section
-    class="grid grid-cols-1 md:grid-cols-[1fr_1.05fr]"
+    class="grid grid-cols-1 grid-rows-[2fr_3fr] md:grid-cols-[1fr_1.05fr] md:grid-rows-1"
     style="height: calc(100vh - var(--nav-h));"
   >
 
-    <!-- Left: random photo (hidden on mobile) -->
-    <div class="hidden md:flex relative overflow-hidden">
+    <!-- Photo: band on mobile, full left column on desktop -->
+    <div class="relative overflow-hidden">
       {randomPhoto.src && (
         <img
           src={randomPhoto.src}
@@ -38,7 +38,7 @@ if (publicAlbums.length > 0) {
     </div>
 
     <!-- Right: copy -->
-    <div class="flex flex-col justify-center px-8 md:px-16 py-20">
+    <div class="flex flex-col justify-center px-8 md:px-16 py-8 md:py-20">
 
       <!-- Headline -->
       <h1
