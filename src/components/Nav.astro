@@ -13,7 +13,7 @@ interface Props {
 const { breadcrumbs = [] } = Astro.props;
 
 const links = [
-  { href: '/', label: 'gallery' },
+  { href: '/series', label: 'series' },
   ...(SHOW_NOTES ? [{ href: '/notes', label: 'notes' }] : []),
   { href: 'https://shop.pasqualo.to', label: 'shop' },
   { href: '/about', label: 'about' },
@@ -22,7 +22,7 @@ const links = [
 const currentPath = Astro.url.pathname;
 
 function isActive(href: string, label: string): boolean {
-  if (label === 'gallery') return currentPath === '/' || currentPath.startsWith('/gallery');
+  if (label === 'series') return currentPath === '/series' || currentPath.startsWith('/series/');
   if (href.startsWith('http')) return false;
   return currentPath === href || (href !== '/' && currentPath.startsWith(href));
 }

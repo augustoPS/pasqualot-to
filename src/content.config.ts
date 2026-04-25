@@ -10,6 +10,8 @@ const albums = defineCollection({
     description: z.string().optional(),
     cover: z.string(),
     coverOrientation: z.enum(['portrait', 'landscape']).default('portrait'),
+    coverFocal: z.string().optional(), // CSS object-position, e.g. "center 25%" or "left top"
+    coverBg: z.string().optional(),    // Hex color shown while image loads, e.g. "#3a1850"
     photos: z.array(
       z.object({
         file: z.string(),

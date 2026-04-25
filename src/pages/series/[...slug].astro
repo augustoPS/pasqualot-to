@@ -98,17 +98,17 @@ const isAll = slug.endsWith('/all');
 const nodePath = isAll ? slug.slice(0, -4) : slug;
 const parts = nodePath.split('/');
 
-const breadcrumbs: { label: string; href: string }[] = [{ label: 'Gallery', href: '/' }];
+const breadcrumbs: { label: string; href: string }[] = [{ label: 'Series', href: '/series' }];
 for (let i = 0; i < parts.length - 1; i++) {
   const id = parts.slice(0, i + 1).join('/');
-  breadcrumbs.push({ label: titleMap.get(id) ?? id, href: `/gallery/${id}` });
+  breadcrumbs.push({ label: titleMap.get(id) ?? id, href: `/series/${id}` });
 }
 const nodeTitle = titleMap.get(nodePath) ?? parts[parts.length - 1];
 if (isAll) {
-  breadcrumbs.push({ label: nodeTitle, href: `/gallery/${nodePath}` });
-  breadcrumbs.push({ label: 'All', href: `/gallery/${slug}` });
+  breadcrumbs.push({ label: nodeTitle, href: `/series/${nodePath}` });
+  breadcrumbs.push({ label: 'All', href: `/series/${slug}` });
 } else {
-  breadcrumbs.push({ label: nodeTitle, href: `/gallery/${slug}` });
+  breadcrumbs.push({ label: nodeTitle, href: `/series/${slug}` });
 }
 
 // Page meta
@@ -141,7 +141,7 @@ if (type === 'collection' && collection) {
       collectionChildren.push({
         id: childAlbum.id,
         title: childAlbum.data.title,
-        href: `/gallery/${childAlbum.id}`,
+        href: `/series/${childAlbum.id}`,
         coverSrc: cdnUrl(childAlbum.id, childAlbum.data.cover),
         meta: childAlbum.data.location
           ? `${childAlbum.data.location} · ${year}`
@@ -158,7 +158,7 @@ if (type === 'collection' && collection) {
       collectionChildren.push({
         id: childCol.id,
         title: childCol.data.title,
-        href: `/gallery/${childCol.id}`,
+        href: `/series/${childCol.id}`,
         coverSrc: cdnUrl(childCol.id, childCol.data.cover),
         meta: childCol.data.location
           ? `${childCol.data.location} · ${year}`

@@ -37,9 +37,6 @@ if (publicAlbums.length > 0) {
     <!-- Right: copy -->
     <div class="flex flex-col justify-center px-8 md:px-16 py-20">
 
-      <!-- Kicker -->
-      <p class="mb-6 ff-mono" style="font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-meta);">404 — NOT FOUND</p>
-
       <!-- Headline -->
       <h1
         class="mb-4 ff-serif"
@@ -50,7 +47,7 @@ if (publicAlbums.length > 0) {
       <p class="mb-6 ff-mono" style="font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--color-meta);">FRAME NOT FOUND</p>
 
       <!-- Body -->
-      <div class="ff-serif" style="font-size: 19px; line-height: 1.6; color: var(--color-ink-muted); max-width: 420px;">
+      <div class="ff-serif" style="font-size: 21px; line-height: 1.6; color: var(--color-ink-muted); max-width: 420px;">
         <p>
           The negative you're looking for isn't in the binder.
           While you're here — a frame from <em>{randomPhoto.albumTitle || 'the archive'}</em>
@@ -62,14 +59,14 @@ if (publicAlbums.length > 0) {
       <div class="mt-10 flex items-center gap-8">
         <a
           href="/"
-          class="ff-display"
-          style="font-size: 12px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-ink); text-decoration: none; border: 1px solid var(--color-line-2); display: inline-block; padding: 10px 20px; transition: border-color 0.15s;"
-        >← BACK TO GALLERY</a>
+          class="ff-mono"
+          style="font-size: 11px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-meta); text-decoration: none; display: inline-block;"
+        >← BACK HOME</a>
         <a
-          href="/"
-          class="ff-display"
-          style="font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-meta); text-decoration: none;"
-        >SEE THE SERIES ARCHIVE</a>
+          href="/series"
+          class="ff-mono"
+          style="font-size: 11px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-meta); text-decoration: none; display: inline-block;"
+        >SEE THE ARCHIVE</a>
       </div>
     </div>
   </section>

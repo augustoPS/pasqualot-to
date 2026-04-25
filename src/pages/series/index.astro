@@ -1,0 +1,63 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SeriesCard from '../../components/home/SeriesCard.astro';
+import { cdnUrl, cdnThumbUrl } from '../../lib/photos';
+
+const allAlbums = await getCollection('albums');
+const allCollections = await getCollection('albumCollections');
+
+const childIds = new Set(allCollections.flatMap((c) => c.data.children));
+
+const series = allCollections
+  .filter((c) => !childIds.has(c.id) && !c.data.hidden)
+  .sort((a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
+
+interface SeriesCardData {
+  index: number;
+  title: string;
+  href: string;
+  coverSrc: string;
+  meta: string;
+  albumCount: number;
+  stackThumbs: { src: string; alt: string }[];
+}
+
+const cards: SeriesCardData[] = series.map((c, i) => {
+  const childAlbums = c.data.children
+    .map((id) => allAlbums.find((a) => a.id === id))
+    .filter(Boolean);
+
+  const stackThumbs = childAlbums.slice(0, 3).map((a) => ({
+    src: cdnThumbUrl(a!.id, a!.data.cover),
+    alt: a!.data.title,
+  }));
+
+  const year = new Date(c.data.date).getFullYear();
+  const meta = c.data.location ? `${c.data.location} · ${year}` : String(year);
+
+  return {
+    index: i + 1,
+    title: c.data.title,
+    href: `/series/${c.id}`,
+    coverSrc: cdnUrl(c.id, c.data.cover),
+    meta,
+    albumCount: childAlbums.length,
+    stackThumbs,
+  };
+});
+---
+
+<BaseLayout title="Series">
+  <section class="px-10 py-24">
+    {cards.length === 0 ? (
+      <p class="ff-serif" style="color: var(--color-meta); font-size: 14px;">No series yet.</p>
+    ) : (
+      <div class="flex flex-col md:grid md:grid-cols-3 max-w-[1200px] mx-auto" style="gap: 24px;">
+        {cards.map((card) => (
+          <SeriesCard {...card} />
+        ))}
+      </div>
+    )}
+  </section>
+</BaseLayout>
