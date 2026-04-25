@@ -10,7 +10,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "test": "vitest run"
+    "test": "vitest run",
+    "deploy": "astro build && vercel deploy --prebuilt --prod"
   },
   "dependencies": {
     "@astrojs/vercel": "^10.0.3",
