@@ -7,7 +7,7 @@ export const ALBUM_SLUG_REGEX = /^[a-z0-9][a-z0-9/-]*$/;
  * Both inputs are hashed to equal-length digests before comparison
  * so the result is constant-time regardless of input length differences.
  */
-export function safeCompare(a: string, b: string, key: string): boolean {
+export function safeCompare(a: string, b: string, key: string | Uint8Array): boolean {
   const hmacA = createHmac('sha256', key).update(a).digest();
   const hmacB = createHmac('sha256', key).update(b).digest();
   return timingSafeEqual(hmacA, hmacB);

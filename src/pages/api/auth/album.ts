@@ -28,7 +28,7 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(JSON.stringify({ error: 'Incorrect password' }), { status: 401 });
   }
 
-  if (!safeCompare(password, expectedPassword)) {
+  if (!safeCompare(password, expectedPassword, jwtSecret)) {
     await new Promise(resolve => setTimeout(resolve, 1000));
     return new Response(JSON.stringify({ error: 'Incorrect password' }), { status: 401 });
   }

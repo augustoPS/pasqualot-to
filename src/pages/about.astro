@@ -17,8 +17,8 @@ const aboutPhotoSrc = `https://photos.pasqualo.to/about/${orientation}.jpg`;
     <!-- Photo -->
     <div
       class={isLandscape
-        ? 'relative overflow-hidden aspect-video md:aspect-auto'
-        : 'relative overflow-hidden aspect-[4/5] md:aspect-auto min-h-[300px] md:min-h-0'}
+        ? 'relative overflow-hidden aspect-video md:aspect-auto order-2 md:order-1'
+        : 'relative overflow-hidden aspect-[4/5] md:aspect-auto min-h-[300px] md:min-h-0 order-2 md:order-1'}
     >
       <img
         src={aboutPhotoSrc}
@@ -29,7 +29,7 @@ const aboutPhotoSrc = `https://photos.pasqualo.to/about/${orientation}.jpg`;
 
     <!-- Text column -->
     <div
-      class="flex flex-col justify-end px-10 md:px-16 py-6 md:py-8"
+      class="flex flex-col justify-end px-10 md:px-16 py-6 md:py-8 order-1 md:order-2"
       style="max-width: 600px;"
     >
       <p
