@@ -59,3 +59,82 @@ describe('pagbrasilAdapter.verify', () => {
     expect(pagbrasilAdapter.verify('', new Headers(), [VALID_PAID], SECRET)).toBe(false);
   });
 });
+
+describe('pagbrasilAdapter.toEvent', () => {
+  it('maps a paid Pix event with authorization_code', () => {
+    const event = pagbrasilAdapter.toEvent(VALID_PAID);
+    expect(event).not.toBeNull();
+    expect(event!.source).toBe('pagbrasil');
+    expect(event!.type).toBe('order.paid');
+    expect(event!.orderId).toBe('1234567890');
+    expect(event!.amountBrlCents).toBe(3950);
+    expect(event!.paymentMethod).toBe('pix');
+    expect(event!.authorizationCode).toBe('AUTH123');
+    expect(event!.receivedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+  });
+
+  it.each([
+    ['F', 'order.failed'],
+    ['R', 'order.failed'],
+    ['J', 'order.failed'],
+    ['P', 'order.refunded'],
+    ['C', 'order.chargeback'],
+  ])('maps payment_status %s to %s', (status, expectedType) => {
+    const payload = { ...VALID_PAID, payment_status: status };
+    const event = pagbrasilAdapter.toEvent(payload);
+    expect(event!.type).toBe(expectedType);
+  });
+
+  it.each([
+    ['X', 'pix'],
+    ['C', 'credit_card'],
+    ['B', 'boleto'],
+    ['D', 'debit'],
+    ['Z', 'unknown'],
+  ])('maps payment_method %s to %s', (code, expected) => {
+    const payload = { ...VALID_PAID, payment_method: code };
+    const event = pagbrasilAdapter.toEvent(payload);
+    expect(event!.paymentMethod).toBe(expected);
+  });
+
+  it.each([
+    ['39.50', 3950],
+    ['0.01', 1],
+    ['100', 10000],
+    ['39.5', 3950],
+  ])('converts amount_brl %s to %d cents', (input, expected) => {
+    const payload = { ...VALID_PAID, amount_brl: input };
+    const event = pagbrasilAdapter.toEvent(payload);
+    expect(event!.amountBrlCents).toBe(expected);
+  });
+
+  it('returns null when amount_brl is unparseable', () => {
+    const payload = { ...VALID_PAID, amount_brl: 'not-a-number' };
+    expect(pagbrasilAdapter.toEvent(payload)).toBeNull();
+  });
+
+  it('returns null when required fields are missing', () => {
+    const { order: _drop, ...incomplete } = VALID_PAID;
+    expect(pagbrasilAdapter.toEvent(incomplete)).toBeNull();
+  });
+
+  it('omits authorizationCode when payment_status is not A', () => {
+    const payload = { ...VALID_PAID, payment_status: 'F' };
+    const event = pagbrasilAdapter.toEvent(payload);
+    expect(event!.authorizationCode).toBeUndefined();
+  });
+
+  it('strips secret and signature from raw, keeps other fields', () => {
+    const event = pagbrasilAdapter.toEvent(VALID_PAID);
+    expect(event!.raw).not.toHaveProperty('secret');
+    expect(event!.raw).not.toHaveProperty('signature');
+    expect(event!.raw.order).toBe('1234567890');
+    expect(event!.raw.payment_status).toBe('A');
+  });
+
+  it('skips non-string fields when building raw', () => {
+    const payload = { ...VALID_PAID, weird_field: 42 as unknown as string };
+    const event = pagbrasilAdapter.toEvent(payload);
+    expect(event!.raw).not.toHaveProperty('weird_field');
+  });
+});
