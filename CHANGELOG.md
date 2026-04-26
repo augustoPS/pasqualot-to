@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-04-26 — shop-copy-readme-cleanup
+
+Replaced the Astro template README with a minimal ops-focused quick-start covering run commands, env vars, and deploy notes.
+
+### Other
+- docs: replace Astro template README with ops-focused quick-start (f471610)
+
+---
+
 ## 2026-04-25 — gallery-ui-copy-deploy
 
 Session focused on pasqualo.to UI polish and tooling. Fixed a critical album password auth bug (safeCompare was missing its HMAC key argument, crashing every auth attempt). Overhauled the protected/series badges to use 「」brackets at top-right. Reworked the about, 404, and series pages for consistent viewport-lock layouts with proper mobile behavior. Established a copy.json workflow for external copy editing. Added `npm run deploy` for local build + Vercel prebuilt deploys, and wired up a pre-wrap-up hook to flag pending changes.
