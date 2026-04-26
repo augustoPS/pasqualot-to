@@ -1,43 +1,33 @@
-# Astro Starter Kit: Minimal
+# pasqualo.to
+
+Personal site and photo gallery. Built with Astro 6 + Tailwind v4, deployed on Vercel.
+
+## Run locally
 
 ```sh
-npm create astro@latest -- --template minimal
+npm install
+npm run dev       # localhost:4321
+npm run test      # vitest
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## Deploy
 
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
+```sh
+npm run deploy    # astro build + vercel deploy --prebuilt --prod
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+Or push to `main` — Vercel deploys automatically.
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+## Env vars
 
-Any static assets, like images, can be placed in the `public/` directory.
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+| Variable | Description |
+|---|---|
+| `R2_ACCOUNT_ID` | Cloudflare account ID |
+| `R2_ACCESS_KEY_ID` | R2 access key |
+| `R2_SECRET_ACCESS_KEY` | R2 secret |
+| `R2_BUCKET_NAME` | R2 bucket name |
+| `UPSTASH_REDIS_REST_URL` | Upstash Redis URL (shared with shop) |
+| `UPSTASH_REDIS_REST_TOKEN` | Upstash Redis token |
+| `PHOTO_JWT_SECRET` | JWT signing secret for protected album tokens |
+| `ALBUM_PASSWORD_*` | Per-album passwords (e.g. `ALBUM_PASSWORD_MYALBUM`) |
+| `PUBLIC_ABOUT_PHOTO_ORIENTATION` | `portrait` or `landscape` — controls about page photo layout |
